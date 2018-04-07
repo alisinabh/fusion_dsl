@@ -1,0 +1,6 @@
+
+  play 'vhello'
+  play 'hello\'Ali' + 'world'
+  play 'vwelc-' + (rand 1, 5)
+  play 'hello'
+  play 'hello' + (rand -10, 500)

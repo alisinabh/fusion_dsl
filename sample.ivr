@@ -4,7 +4,8 @@ DB: IFilmGame
 SOUNDS: ifilmmulti
 
 main:
-  play 'vwelcome'
+  play 'vwelcome' + (rand 1, 5), no_skip
+  # %{name: :play, args: [%{name: :add, args: ['vwelcome', %{name: :rand, args: [1, 5]}], no_skip]}
 
   if @is_mobile do
     goto mob_proc
@@ -19,7 +20,7 @@ fix_proc:
 
 
 get_account:
-  $account = @db.account.find({mobile: $mobile})
+  $account = @db.account.find {mobile: $mobile}
   if $account == nil do
-    $account = @db.account.create({mobile: $mobile, tp: 0, questions: []})
+    $account = @db.account.create {mobile: $mobile, tp: 0, questions: []}
   end
