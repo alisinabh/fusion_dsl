@@ -1,0 +1,25 @@
+FORMAT: IVRONE1
+NAME: IFilmGame
+DB: IFilmGame
+SOUNDS: ifilmmulti
+
+main:
+  play 'vwelcome'
+
+  if @is_mobile do
+    goto mob_proc
+  else
+    goto fix_proc
+  end
+
+fix_proc:
+  play 'vwelcfix'
+  $mobile = keycheck 'ventphone', 10
+  goto get_account
+
+
+get_account:
+  $account = @db.account.find({mobile: $mobile})
+  if $account == nil do
+    $account = @db.account.create({mobile: $mobile, tp: 0, questions: []})
+  end
