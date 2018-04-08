@@ -3,24 +3,24 @@ NAME: IFilmGame
 DB: IFilmGame
 SOUNDS: ifilmmulti
 
-main:
-  play 'vwelcome' + (rand 1, 5), no_skip
+def main:
+  play 'vwelcome' + (rand 1, 5)
   # %{name: :play, args: [%{name: :add, args: ['vwelcome', %{name: :rand, args: [1, 5]}], no_skip]}
 
-  if @is_mobile do
+  if @is_mobile
     goto mob_proc
   else
     goto fix_proc
   end
 
-fix_proc:
+def fix_proc:
   play 'vwelcfix'
   $mobile = keycheck 'ventphone', 10
   goto get_account
 
 
-get_account:
-  $account = @db.account.find {mobile: $mobile}
-  if $account == nil do
-    $account = @db.account.create {mobile: $mobile, tp: 0, questions: []}
+def get_account:
+  $account = @db.account.find %'{"mobile": $mobile}'
+  if $account == nil
+    $account = @db.account.create %'{"mobile": $mobile, "tp": 0, "questions": []}'
   end
