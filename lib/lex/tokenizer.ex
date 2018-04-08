@@ -18,12 +18,13 @@ defmodule IvroneDsl.Lex.Tokenizer do
   end
 
   defp normalize(code) do
-    String.replace_leading(code, "\r\n", "\n")
+    String.replace(code, "\r\n", "\n")
   end
 
   defp tokenize_headers(code, acc) do
-    [format | _] = String.split(binary, ["\n", "\r\n"])
-    rest =
+    cond do
+
+    end
   end
 
   # Handle Lang identifires
