@@ -1,4 +1,4 @@
-defmodule IvroneDsl.Lex.Program do
+defmodule IvroneDsl.Processor.Program do
   @moduledoc """
   Program struct and functions
   """
@@ -6,7 +6,7 @@ defmodule IvroneDsl.Lex.Program do
   defstruct [:name, :version, :db, :sound_dir, procedures: []]
 end
 
-defmodule IvroneDsl.Lex.Action do
+defmodule IvroneDsl.Processor.Action do
   @moduledoc """
   Executable actions of IVRONE
   """

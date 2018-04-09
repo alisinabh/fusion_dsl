@@ -1,4 +1,4 @@
-defmodule IvroneDsl.Lex.Tokenizer do
+defmodule IvroneDsl.Processor.Lexer do
   @moduledoc """
   Tokenizer and normalizer for IVRONE DSL
   """
@@ -38,6 +38,12 @@ defmodule IvroneDsl.Lex.Tokenizer do
 
   @doc """
   Tokenizes an IVRONE Code
+
+  Lexical types:
+   - strings begining with quote ('): A literal string
+   - strings begining with percent sign (%): A json object
+   - strings: operators or identifires
+   - number: A literal number. float or integer
   """
   @spec tokenize(String.t()) :: {:ok, Map.t(), List.t()} | {:error, String.t()}
   def tokenize(raw_code) do
@@ -191,19 +197,25 @@ defmodule IvroneDsl.Lex.Tokenizer do
       Regex.match?(@r_lable, bin) ->
         # Lable
         [_, lable] = Regex.run(@r_lable, bin)
+
         acc =
           acc
           |> inject("def")
           |> inject(lable)
+
         skip_line(bin, acc)
+
       Regex.match?(@r_goto, bin) ->
         # Goto instruction
         [_, destination] = Regex.run(@r_goto, bin)
+
         acc =
           acc
           |> inject("goto")
           |> inject(destination)
+
         skip_line(bin, acc)
+
       true ->
         # Unmatched code. error will be generated!
         {:error, acc, bin, "Unknown expression in line!"}

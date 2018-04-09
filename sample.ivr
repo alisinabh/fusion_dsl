@@ -6,6 +6,7 @@ SOUNDS: ifilmmulti
 def main:
   play 'vwelcome' + (rand 1, 5)
   # %{name: :play, args: [%{name: :add, args: ['vwelcome', %{name: :rand, args: [1, 5]}], no_skip]}
+  # {:play, [{:add, ["vwelcome", {:rand, [1, 5]}]}]}
 
   if @is_mobile
     goto mob_proc
