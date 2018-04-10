@@ -4,15 +4,21 @@ DB: IFilmGame
 SOUNDS: ifilmmulti
 
 def main:
-  play 'vwelcome' + (rand 1, 5)
+  play 'vwelcome' + (rand 1, 50)
   # %{name: :play, args: [%{name: :add, args: ['vwelcome', %{name: :rand, args: [1, 5]}], no_skip]}
   # {:play, [{:add, ["vwelcome", {:rand, [1, 5]}]}]}
 
-  if @is_mobile
-    goto mob_proc
+  if @is_mobile == 1
+    if @bullshit
+      goto mob_proc
+    else
+      goto fix_proc
+    end
   else
     goto fix_proc
   end
+
+  # {:jump_false, 5, [{:eq, 5, [{:get_var, 5, "is_mobile"}, 1]}, 5]}
 
 def fix_proc:
   play 'vwelcfix'
@@ -21,7 +27,7 @@ def fix_proc:
 
 
 def get_account:
-  $account = @db.account.find %'{"mobile": $mobile}'
+  $account = @db.find.account %'{"mobile": $mobile}'
   if $account == nil
-    $account = @db.account.create %'{"mobile": $mobile, "tp": 0, "questions": []}'
+    $account = @db.create.account %'{"mobile": $mobile, "tp": 0, "questions": []}'
   end

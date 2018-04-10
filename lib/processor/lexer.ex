@@ -31,7 +31,7 @@ defmodule IvroneDsl.Processor.Lexer do
 
   @r_header ~r/\A([A-Za-z0-9\-_]+)\:[ ]*(.+)\n/
   @r_lable ~r/\Adef[ \t]+([A-Za-z0-9\-_]+)\:[ \t]*\n/
-  @r_number ~r/\A[0-9]+[\.]*[0-9]+/
+  @r_number ~r/\A[0-9]+[\.]?[0-9]*/
   @r_string ~r/[^\\](\')/
   @r_var ~r/\A[A-Za-z0-9\_]+/
   @r_goto ~r/\Agoto[ \t]+([A-Za-z0-9\-_]+)/
@@ -48,9 +48,46 @@ defmodule IvroneDsl.Processor.Lexer do
   @spec tokenize(String.t()) :: {:ok, Map.t(), List.t()} | {:error, String.t()}
   def tokenize(raw_code) do
     raw_code = normalize(raw_code)
-    {:ok, headers, code} = tokenize_headers(raw_code, %{})
+    {:ok, headers, code} = tokenize_headers(raw_code, %{}, 1)
     {:ok, tokens} = do_tokenize(code, [])
     {:ok, headers, tokens}
+  end
+
+  @doc """
+  Splits list of tokens to lists of lists by line with line number in beggining of each line
+  """
+  @spec split_by_lines(List.t(), Integer.t()) :: List.t()
+  def split_by_lines(tokens, start_code_line \\ 1) do
+    do_split_by_lines(tokens, [start_code_line], [], start_code_line)
+  end
+
+  defp do_split_by_lines(["\n" | t], [], acc, ln) do
+    do_split_by_lines(t, [ln + 1], acc, ln + 1)
+  end
+
+  defp do_split_by_lines(["\n" | t], [_], acc, ln) do
+    do_split_by_lines(t, [ln + 1], acc, ln + 1)
+  end
+
+  defp do_split_by_lines(["\n" | t], split_acc, acc, ln) do
+    split_acc = Enum.reverse(split_acc)
+    do_split_by_lines(t, [ln + 1], [split_acc | acc], ln + 1)
+  end
+
+  defp do_split_by_lines([token | t], split_acc, acc, ln) do
+    do_split_by_lines(t, [token | split_acc], acc, ln)
+  end
+
+  defp do_split_by_lines([], [], acc, _ln) do
+    Enum.reverse(acc)
+  end
+
+  defp do_split_by_lines([], [_], acc, ln) do
+    do_split_by_lines([], [], acc, ln)
+  end
+
+  defp do_split_by_lines([], split_acc, acc, ln) do
+    do_split_by_lines([], [], [split_acc | acc], ln)
   end
 
   # Normalizes string (Such as line endings)
@@ -59,17 +96,20 @@ defmodule IvroneDsl.Processor.Lexer do
   end
 
   # Headers finished
-  defp tokenize_headers(<<"\n", code::binary>>, acc), do: {:ok, acc, code}
+  defp tokenize_headers(<<"\n", code::binary>>, acc, ln) do
+    {:ok, Map.put(acc, :start_code, ln + 1), code}
+  end
 
   # Headers process
-  defp tokenize_headers(code, acc) do
+  defp tokenize_headers(code, acc, ln) do
     case Regex.run(@r_header, code) do
       [full_header, name, value] ->
         code = String.slice(code, String.length(full_header)..-1)
 
         tokenize_headers(
           code,
-          Map.put(acc, String.to_atom(String.downcase(name)), value)
+          Map.put(acc, String.to_atom(String.downcase(name)), value),
+          ln + 1
         )
 
       _ ->
@@ -99,39 +139,6 @@ defmodule IvroneDsl.Processor.Lexer do
 
     defp do_tokenize(<<unquote(str), rest::binary>>, acc) do
       do_tokenize_num(unquote(str) <> rest, acc, false)
-    end
-
-    defp do_tokenize_num(<<unquote(str), rest::binary>>, acc, neg) do
-      num_cnt =
-        case Regex.run(@r_number, rest, return: :index) do
-          [{0, num_cnt}] ->
-            num_cnt
-
-          _ ->
-            0
-        end
-
-      r_num = to_string(unquote(num)) <> String.slice(rest, 0, num_cnt)
-
-      final_num =
-        cond do
-          String.contains?(r_num, ".") ->
-            {f_num, ""} = Float.parse(r_num)
-            f_num
-
-          true ->
-            {i_num, ""} = Integer.parse(r_num)
-            i_num
-        end
-
-      final_num =
-        if neg do
-          -1 * final_num
-        else
-          final_num
-        end
-
-      do_tokenize(String.slice(rest, num_cnt..-1), [final_num | acc])
     end
   end)
 
@@ -181,14 +188,9 @@ defmodule IvroneDsl.Processor.Lexer do
     do_tokenize(rest, ["\n" | acc])
   end
 
-  # Handles new line (Windows line ending)
-  defp do_tokenize(<<"\r\n", rest::binary>>, acc) do
-    do_tokenize(rest, ["\n" | acc])
-  end
-
   # Ignores comment
   defp do_tokenize(<<"#", rest::binary>>, acc) do
-    skip_line(rest, ["\n" | acc])
+    skip_line(rest, acc)
   end
 
   # Unmatched binary
@@ -241,10 +243,41 @@ defmodule IvroneDsl.Processor.Lexer do
     end
   end
 
+  defp do_tokenize_num(rest, acc, neg) do
+    num_cnt =
+      case Regex.run(@r_number, rest, return: :index) do
+        [{0, num_cnt}] ->
+          num_cnt
+
+        _ ->
+          0
+      end
+
+    r_num = String.slice(rest, 0, num_cnt)
+
+    final_num =
+      cond do
+        String.contains?(r_num, ".") ->
+          {f_num, ""} = Float.parse(r_num)
+          f_num
+
+        true ->
+          {i_num, ""} = Integer.parse(r_num)
+          i_num
+      end
+
+    final_num =
+      if neg do
+        -1 * final_num
+      else
+        final_num
+      end
+
+    do_tokenize(String.slice(rest, num_cnt..-1), [final_num | acc])
+  end
+
   # Skips a line until line ending or empty binary
   defp skip_line(<<"\n", _::binary>> = bin, acc), do: do_tokenize(bin, acc)
-
-  defp skip_line(<<"\r\n", _::binary>> = bin, acc), do: do_tokenize(bin, acc)
 
   defp skip_line(<<>>, acc), do: do_tokenize(<<>>, acc)
 
