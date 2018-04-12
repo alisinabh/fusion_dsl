@@ -3,5 +3,5 @@ defmodule IvroneDsl.Processor.Program do
   Program struct and functions
   """
 
-  defstruct [:name, :version, :db, :sound_dir, procedures: []]
+  defstruct [:name, :version, :db, :sound_dir, procedures: %{}]
 end

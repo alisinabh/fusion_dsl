@@ -1,0 +1,14 @@
+FORMAT: IVRONE1
+NAME: IFilmGame
+DB: IFilmGame
+SOUNDS: ifilmmulti
+
+def main:
+  $salam = 1
+  $salam2 = 'hello'
+  $var1 = 1235.2
+  $salam2
+
+
+# if $salam == 'salam'
+# salam , $salam == if

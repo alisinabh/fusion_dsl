@@ -8,6 +8,9 @@ def main:
   # %{name: :play, args: [%{name: :add, args: ['vwelcome', %{name: :rand, args: [1, 5]}], no_skip]}
   # {:play, [{:add, ["vwelcome", {:rand, [1, 5]}]}]}
 
+  $code = $alisina.test
+  # {:set_var, [], ["code", "salam"]}
+
   if @is_mobile == 1
     if @bullshit
       goto mob_proc
