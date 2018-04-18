@@ -138,6 +138,21 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, num, state}
   end
 
+  defp glast(["\=" | t]) do
+
+  end
+
+  defp seprate_args(["," | t], acc, arg_acc) do
+    case acc do
+      [] -> seprate_args(t, acc, [])
+      _ -> seprate_args(t, acc ++ [arg_acc], [])
+    end
+  end
+
+  defp seprate_args([arg, "," | t], acc, arg_acc) do
+    seprate_args(t)
+  end
+
   defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0)
 
   defp find_end_else([[_, "else"] | t], 0, acc) do
