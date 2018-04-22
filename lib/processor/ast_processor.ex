@@ -15,7 +15,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   @clause_beginners ["if"]
   @noops ["else", "noop"]
-  @operators ["=", "==", "<=", ">=", "<", ">", "+", "-", "*", "/", "%"]
+  @operators ["*", "/", "%", "+", "-", "=", "==", "<=", ">=", "<", ">"]
 
   @doc """
   Generates an ast array of program
@@ -28,7 +28,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
     do_generate_ast(tokens, @default_state)
   end
 
-  defp do_generate_ast([[line_number | raw_line] | t], state) do
+  defp do_generate_ast([[_line_number | raw_line] | t], state) do
     line = reorder_line(raw_line)
     {:ok, ast, new_state} = glast(line, t, state)
 
@@ -49,21 +49,30 @@ defmodule IvroneDsl.Processor.AstProcessor do
   def reorder_line(line) do
     line
     |> Enum.reverse()
-    |> do_reorder_operators([])
+    |> do_reorder_operators(@operators, [])
   end
 
-  Enum.each(@operators, fn op ->
-    defp do_reorder_operators([unquote(op) | t], acc) do
-      t = insert_operator(t, unquote(op), [])
-      do_reorder_operators(t, ["," | acc])
-    end
-  end)
+  # Enum.each(@operators, fn op ->
+  #   defp do_reorder_operators([unquote(op) | t], acc) do
+  #     t = insert_operator(t, unquote(op), [])
+  #     do_reorder_operators(t, ["," | acc])
+  #   end
+  # end)
 
-  defp do_reorder_operators([token | t], acc) do
-    do_reorder_operators(t, [token | acc])
+  defp do_reorder_operators([op | top], [token | t], acc) when op == token do
+    t = insert_operator(t, token, [])
+    do_reorder_operators(t, ["," | acc])
   end
 
-  defp do_reorder_operators([], acc) do
+  defp do_reorder_operators(ops, [token | t], acc) do
+    do_reorder_operators(ops, t, [token | acc])
+  end
+
+  defp do_reorder_operators([_op | top], [], acc) do
+    do_reorder_operators(top, Enum.reverse(acc), [])
+  end
+
+  defp do_reorder_operators([], _, acc) do
     acc
   end
 
@@ -138,8 +147,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, num, state}
   end
 
-  defp glast(["\=" | t]) do
-
+  defp glast(["\=" | t], tail, state) do
   end
 
   defp seprate_args(["," | t], acc, arg_acc) do
@@ -147,10 +155,6 @@ defmodule IvroneDsl.Processor.AstProcessor do
       [] -> seprate_args(t, acc, [])
       _ -> seprate_args(t, acc ++ [arg_acc], [])
     end
-  end
-
-  defp seprate_args([arg, "," | t], acc, arg_acc) do
-    seprate_args(t)
   end
 
   defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0)
