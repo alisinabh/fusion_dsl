@@ -52,28 +52,39 @@ defmodule IvroneDsl.Processor.AstProcessor do
     |> do_reorder_operators(@operators, [])
   end
 
-  # Enum.each(@operators, fn op ->
-  #   defp do_reorder_operators([unquote(op) | t], acc) do
-  #     t = insert_operator(t, unquote(op), [])
-  #     do_reorder_operators(t, ["," | acc])
-  #   end
-  # end)
-
-  defp do_reorder_operators([op | top], [token | t], acc) when op == token do
+  defp do_reorder_operators([token | t], [op | top], acc) when op == token do
     t = insert_operator(t, token, [])
-    do_reorder_operators(t, ["," | acc])
+    {:ok, t_count} = close_scope(acc, 0, 0)
+    acc = List.insert_at(acc, t_count, ")")
+    do_reorder_operators(t, top, ["," | acc])
   end
 
-  defp do_reorder_operators(ops, [token | t], acc) do
-    do_reorder_operators(ops, t, [token | acc])
+  defp do_reorder_operators([token | t], ops, acc) do
+    do_reorder_operators(t, ops, [token | acc])
   end
 
-  defp do_reorder_operators([_op | top], [], acc) do
-    do_reorder_operators(top, Enum.reverse(acc), [])
+  defp do_reorder_operators([], [_op | top], acc) do
+    do_reorder_operators(Enum.reverse(acc), top, [])
   end
 
-  defp do_reorder_operators([], _, acc) do
+  defp do_reorder_operators([], [], acc) do
     acc
+  end
+
+  defp close_scope(["(" | t], in_count, token_count) do
+    close_scope(t, in_count + 1, token_count + 1)
+  end
+
+  defp close_scope([")" | t], in_count, token_count) when in_count > 0 do
+    close_scope(t, in_count - 1, token_count + 1)
+  end
+
+  defp close_scope([_ | t], in_count, token_count) when in_count > 0 do
+    close_scope(t, in_count, token_count + 1)
+  end
+
+  defp close_scope(_, 0, token_count) do
+    {:ok, token_count + 1}
   end
 
   defp insert_operator([], operator, acc) do
@@ -89,7 +100,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   defp insert_operator([left | t], operator, acc) do
-    insert_operator_skip(["/" <> operator, left | acc], t)
+    insert_operator_skip(["(", "/" <> operator, left | acc], t)
   end
 
   defp insert_operator_skip(acc, []) do
@@ -101,7 +112,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   # glast = Generate Line AST
-  defp glast(["def", str_proc_name], _tail, state) do
+  defp glast(["def", str_proc_name], _t_lines, state) do
     proc_name = String.to_atom(str_proc_name)
 
     cur_proces =
@@ -120,8 +131,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, nil, new_state}
   end
 
-  defp glast(["if" | if_data], tail, state) do
-    case find_end_else(tail) do
+  defp glast(["if" | if_data], t_lines, state) do
+    case find_end_else(t_lines) do
       {:ok, skip_amount} ->
         if_data
 
@@ -130,31 +141,24 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end
 
-  defp glast([<<"$", var::binary>>, "=" | t], tail, state) do
-    {:ok, ast, state} = glast(t, tail, state)
+  defp glast([<<"$", var::binary>>, "=" | t], t_lines, state) do
+    {:ok, ast, state} = glast(t, t_lines, state)
     {:ok, {:set_var, [], [var, ast]}, state}
   end
 
-  defp glast([<<"$", var::binary>> | t], _tail, state) do
+  defp glast([<<"$", var::binary>> | t], _t_lines, state) do
     {:ok, {:get_var, [], [var]}, state}
   end
 
-  defp glast([<<"'", str::binary>> | t], tail, state) do
+  defp glast([<<"'", str::binary>> | t], _t_lines, state) do
     {:ok, String.slice(str, 0, String.length(str) - 1), state}
   end
 
-  defp glast([num | t], tail, state) when is_number(num) do
+  defp glast([num | t], _t_lines, state) when is_number(num) do
     {:ok, num, state}
   end
 
-  defp glast(["\=" | t], tail, state) do
-  end
-
-  defp seprate_args(["," | t], acc, arg_acc) do
-    case acc do
-      [] -> seprate_args(t, acc, [])
-      _ -> seprate_args(t, acc ++ [arg_acc], [])
-    end
+  defp glast(["\=" | t], t_lines, state) do
   end
 
   defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0)
