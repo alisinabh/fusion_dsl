@@ -4,11 +4,12 @@ DB: IFilmGame
 SOUNDS: ifilmmulti
 
 def main:
-  play 'salam', 1 , 2 == 2
+  #play 'salam', 1 , 2 == 2
   $salam = 1
-  $salam2 = 'hello'
-  $var1 = 1235.2
-  $salam2
+  $salam2 = 1 + 2 + 3
+  # $salam2 = 'hello'
+  # $var1 = 1235.2
+  # $salam2
 
 
 # if $salam == 'salam'

@@ -30,7 +30,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   defp do_generate_ast([[_line_number | raw_line] | t], state) do
     line = reorder_line(raw_line)
-    {:ok, ast, new_state} = glast(line, t, state)
+    {:ok, ast, new_state} = gen_ast(line, t, state)
 
     case ast do
       nil ->
@@ -47,16 +47,17 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   def reorder_line(line) do
+    # |> Enum.reverse()
+
     line
-    |> Enum.reverse()
     |> do_reorder_operators(@operators, [])
   end
 
-  defp do_reorder_operators([token | t], [op | top], acc) when op == token do
-    t = insert_operator(t, token, [])
-    {:ok, t_count} = close_scope(acc, 0, 0)
-    acc = List.insert_at(acc, t_count, ")")
-    do_reorder_operators(t, top, ["," | acc])
+  defp do_reorder_operators([token | t], [op | _] = ops, acc) when op == token do
+    acc = insert_operator(acc, token, [], 0)
+    {:ok, t_count} = close_scope(t, 0, 0)
+    t = List.insert_at(t, t_count, ")")
+    do_reorder_operators(t, ops, ["," | acc])
   end
 
   defp do_reorder_operators([token | t], ops, acc) do
@@ -68,7 +69,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   defp do_reorder_operators([], [], acc) do
-    acc
+    Enum.reverse(acc)
   end
 
   defp close_scope(["(" | t], in_count, token_count) do
@@ -83,23 +84,37 @@ defmodule IvroneDsl.Processor.AstProcessor do
     close_scope(t, in_count, token_count + 1)
   end
 
+  Enum.each(@operators, fn op ->
+    defp close_scope([unquote(op) | t], in_count, token_count) do
+      close_scope(t, in_count, token_count + 1)
+    end
+  end)
+
   defp close_scope(_, 0, token_count) do
     {:ok, token_count + 1}
   end
 
-  defp insert_operator([], operator, acc) do
+  defp insert_operator([], operator, acc, 0) do
     [operator | acc]
   end
 
-  defp insert_operator([")" | t], operator, acc) do
-    insert_operator(t, operator, [")" | acc])
+  defp insert_operator([")" | t], operator, acc, in_count) do
+    insert_operator(t, operator, [")" | acc], in_count - 1)
   end
 
-  defp insert_operator([<<".", _::binary>> = h | t], operator, acc) do
-    insert_operator(t, operator, [h | acc])
+  defp insert_operator(["(" | t], operator, acc, in_count) do
+    insert_operator(t, operator, ["(" | acc], in_count + 1)
   end
 
-  defp insert_operator([left | t], operator, acc) do
+  defp insert_operator([h | t], operator, acc, in_count) when in_count > 0 do
+    insert_operator(t, operator, [h | acc], in_count)
+  end
+
+  defp insert_operator([<<".", _::binary>> = h | t], operator, acc, in_count) do
+    insert_operator(t, operator, [h | acc], in_count)
+  end
+
+  defp insert_operator([left | t], operator, acc, in_count) do
     insert_operator_skip(["(", "/" <> operator, left | acc], t)
   end
 
@@ -111,8 +126,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     insert_operator_skip([h | acc], t)
   end
 
-  # glast = Generate Line AST
-  defp glast(["def", str_proc_name], _t_lines, state) do
+  # gen_ast = Generate AST
+  defp gen_ast(["def", str_proc_name], _t_lines, state) do
     proc_name = String.to_atom(str_proc_name)
 
     cur_proces =
@@ -131,7 +146,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, nil, new_state}
   end
 
-  defp glast(["if" | if_data], t_lines, state) do
+  defp gen_ast(["if" | if_data], t_lines, state) do
     case find_end_else(t_lines) do
       {:ok, skip_amount} ->
         if_data
@@ -141,24 +156,97 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end
 
-  defp glast([<<"$", var::binary>>, "=" | t], t_lines, state) do
-    {:ok, ast, state} = glast(t, t_lines, state)
+  # TODO: Remove
+  defp gen_ast([<<"$", var::binary>>, "=" | t], t_lines, state) do
+    {:ok, ast, state} = gen_ast(t, t_lines, state)
     {:ok, {:set_var, [], [var, ast]}, state}
   end
 
-  defp glast([<<"$", var::binary>> | t], _t_lines, state) do
-    {:ok, {:get_var, [], [var]}, state}
+  defp gen_ast([<<"$", var::binary>> | t], _t_lines, state) do
+    {:ok, {:var, [], [var]}, state}
   end
 
-  defp glast([<<"'", str::binary>> | t], _t_lines, state) do
+  defp gen_ast([<<"'", str::binary>> | t], _t_lines, state) do
     {:ok, String.slice(str, 0, String.length(str) - 1), state}
   end
 
-  defp glast([num | t], _t_lines, state) when is_number(num) do
+  defp gen_ast([num | t], _t_lines, state) when is_number(num) do
     {:ok, num, state}
   end
 
-  defp glast(["\=" | t], t_lines, state) do
+  defp gen_ast(["(", "/=" | args], t_lines, state) do
+    {:ok, asts, state} =
+      args
+      |> get_scope_tokens([], 0)
+      |> split_args([], [], 0)
+      |> gen_args_ast(t_lines, state, [])
+
+    {:ok, {:eq, [], [asts]}, state}
+  end
+
+  defp gen_ast(["(", "/+" | args], t_lines, state) do
+    {:ok, asts, state} =
+      args
+      |> get_scope_tokens([], 0)
+      |> split_args([], [], 0)
+      |> gen_args_ast(t_lines, state, [])
+
+    {:ok, {:add, [], [asts]}, state}
+  end
+
+  defp gen_ast(["(", "/-" | args], t_lines, state) do
+    {:ok, asts, state} =
+      args
+      |> get_scope_tokens([], 0)
+      |> split_args([], [], 0)
+      |> gen_args_ast(t_lines, state, [])
+
+    {:ok, {:sub, [], [asts]}, state}
+  end
+
+  defp gen_args_ast([arg | t], t_lines, state, asts) do
+    {:ok, ast, state} = gen_ast(arg, t_lines, state)
+    gen_args_ast(t, t_lines, state, [ast | asts])
+  end
+
+  defp gen_args_ast([], _, state, asts) do
+    {:ok, Enum.reverse(asts), state}
+  end
+
+  defp get_scope_tokens(["(" | t], acc, in_count) do
+    get_scope_tokens(t, ["(" | acc], in_count + 1)
+  end
+
+  defp get_scope_tokens([")" | t], acc, 0) do
+    Enum.reverse(acc)
+  end
+
+  defp get_scope_tokens([")" | t], acc, in_count) do
+    get_scope_tokens(t, [")" | acc], in_count - 1)
+  end
+
+  defp get_scope_tokens([token | t], acc, in_count) do
+    get_scope_tokens(t, [token | acc], in_count)
+  end
+
+  defp split_args(["(" | t], acc, f_acc, in_count) do
+    split_args(t, acc, ["(" | f_acc], in_count + 1)
+  end
+
+  defp split_args([")" | t], acc, f_acc, in_count) do
+    split_args(t, acc, [")" | f_acc], in_count - 1)
+  end
+
+  defp split_args(["," | t], acc, f_acc, 0) do
+    split_args(t, [Enum.reverse(f_acc) | acc], [], 0)
+  end
+
+  defp split_args([arg | t], acc, f_acc, in_count) do
+    split_args(t, acc, [arg | f_acc], in_count)
+  end
+
+  defp split_args([], acc, f_acc, 0) do
+    Enum.reverse([Enum.reverse(f_acc) | acc])
   end
 
   defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0)
