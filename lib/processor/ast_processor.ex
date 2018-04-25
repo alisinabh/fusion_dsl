@@ -47,8 +47,6 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   def reorder_line(line) do
-    # |> Enum.reverse()
-
     line
     |> do_reorder_operators(@operators, [])
   end
@@ -98,12 +96,16 @@ defmodule IvroneDsl.Processor.AstProcessor do
     [operator | acc]
   end
 
-  defp insert_operator([")" | t], operator, acc, in_count) do
-    insert_operator(t, operator, [")" | acc], in_count - 1)
+  defp insert_operator(["(" | t], operator, acc, 1) do
+    insert_operator_skip(["(", "/" <> operator, "(" | acc], t)
   end
 
   defp insert_operator(["(" | t], operator, acc, in_count) do
-    insert_operator(t, operator, ["(" | acc], in_count + 1)
+    insert_operator(t, operator, ["(" | acc], in_count - 1)
+  end
+
+  defp insert_operator([")" | t], operator, acc, in_count) do
+    insert_operator(t, operator, [")" | acc], in_count + 1)
   end
 
   defp insert_operator([h | t], operator, acc, in_count) when in_count > 0 do
@@ -114,16 +116,20 @@ defmodule IvroneDsl.Processor.AstProcessor do
     insert_operator(t, operator, [h | acc], in_count)
   end
 
-  defp insert_operator([left | t], operator, acc, in_count) do
-    insert_operator_skip(["(", "/" <> operator, left | acc], t)
-  end
+  # defp insert_operator(["," | t], operator, acc, in_count) do
+  #   insert_operator(t, operator, ["," | acc], in_count)
+  # end
 
-  defp insert_operator_skip(acc, []) do
-    Enum.reverse(acc)
+  defp insert_operator([left | t], operator, acc, 0) do
+    insert_operator_skip(["(", "/" <> operator, left | acc], t)
   end
 
   defp insert_operator_skip(acc, [h | t]) do
     insert_operator_skip([h | acc], t)
+  end
+
+  defp insert_operator_skip(acc, []) do
+    Enum.reverse(acc)
   end
 
   # gen_ast = Generate AST
@@ -181,7 +187,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
       |> split_args([], [], 0)
       |> gen_args_ast(t_lines, state, [])
 
-    {:ok, {:eq, [], [asts]}, state}
+    {:ok, {:eq, [], asts}, state}
   end
 
   defp gen_ast(["(", "/+" | args], t_lines, state) do
@@ -191,7 +197,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
       |> split_args([], [], 0)
       |> gen_args_ast(t_lines, state, [])
 
-    {:ok, {:add, [], [asts]}, state}
+    {:ok, {:add, [], asts}, state}
   end
 
   defp gen_ast(["(", "/-" | args], t_lines, state) do
@@ -201,7 +207,17 @@ defmodule IvroneDsl.Processor.AstProcessor do
       |> split_args([], [], 0)
       |> gen_args_ast(t_lines, state, [])
 
-    {:ok, {:sub, [], [asts]}, state}
+    {:ok, {:sub, [], asts}, state}
+  end
+
+  defp gen_ast(["(", "/*" | args], t_lines, state) do
+    {:ok, asts, state} =
+      args
+      |> get_scope_tokens([], 0)
+      |> split_args([], [], 0)
+      |> gen_args_ast(t_lines, state, [])
+
+    {:ok, {:mult, [], asts}, state}
   end
 
   defp gen_args_ast([arg | t], t_lines, state, asts) do
