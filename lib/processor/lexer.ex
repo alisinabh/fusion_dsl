@@ -143,7 +143,7 @@ defmodule IvroneDsl.Processor.Lexer do
           do_tokenize(rest, [unquote(id) | acc])
 
         true ->
-          do_tokenize(inject_ending(rest), ["(", unquote(id) | acc])
+          do_tokenize(inject_ending(rest), [unquote(id), "(" | acc])
       end
     end
   end)
@@ -160,6 +160,11 @@ defmodule IvroneDsl.Processor.Lexer do
       do_tokenize_num(unquote(str) <> rest, acc, false)
     end
   end)
+
+  # handle json objects
+  defp do_tokenize(<<"%'", rest::binary>>, acc) do
+    do_tokenize_string(rest, acc, "%'")
+  end
 
   # Handle operators
   Enum.each(@lang_ops, fn op ->
@@ -185,11 +190,6 @@ defmodule IvroneDsl.Processor.Lexer do
   # handle strings
   defp do_tokenize(<<"'", rest::binary>>, acc) do
     do_tokenize_string(rest, acc, "'")
-  end
-
-  # handle json objects
-  defp do_tokenize(<<"%'", rest::binary>>, acc) do
-    do_tokenize_string(rest, acc, "%'")
   end
 
   # Ignores space

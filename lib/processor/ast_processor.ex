@@ -11,7 +11,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   alias IvroneDsl.Processor.Program
 
-  @default_state %{proc: nil, clause_if: nil, prog: %Program{}}
+  @default_state %{proc: nil, ln: 0, prog: %Program{}}
 
   @clause_beginners ["if"]
   @noops ["else", "noop"]
@@ -31,6 +31,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     "=" => :eq
   }
 
+  @functions [:play, :keycheck, :rand]
+
   @doc """
   Generates an ast array of program
 
@@ -42,7 +44,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     do_generate_ast(tokens, @default_state)
   end
 
-  defp do_generate_ast([[_line_number | raw_line] | t], state) do
+  defp do_generate_ast([[line_number | raw_line] | t], state) do
+    state = Map.put(state, :ln, line_number)
     line = reorder_line(raw_line)
     {:ok, ast, new_state} = gen_ast(line, t, state)
 
@@ -176,20 +179,22 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end
 
-  # TODO: Remove
-  defp gen_ast([<<"$", var::binary>>, "=" | t], t_lines, state) do
-    {:ok, ast, state} = gen_ast(t, t_lines, state)
-    {:ok, {:set_var, [], [var, ast]}, state}
-  end
-
+  # Variables
   defp gen_ast([<<"$", var::binary>> | t], _t_lines, state) do
-    {:ok, {:var, [], [var]}, state}
+    {:ok, {:var, [ln: state.ln], [var]}, state}
   end
 
+  # Strings
   defp gen_ast([<<"'", str::binary>> | t], _t_lines, state) do
     {:ok, String.slice(str, 0, String.length(str) - 1), state}
   end
 
+  # Json objects
+  defp gen_ast([<<"%'", str::binary>> | t], _t_lines, state) do
+    {:ok, {:json, [ln: state.ln], String.slice(str, 0, String.length(str) - 1)}, state}
+  end
+
+  # Numbers
   defp gen_ast([num | t], _t_lines, state) when is_number(num) do
     {:ok, num, state}
   end
@@ -202,7 +207,19 @@ defmodule IvroneDsl.Processor.AstProcessor do
         |> split_args([], [], 0)
         |> gen_args_ast(t_lines, state, [])
 
-      {:ok, {@operator_names[unquote(op)], [], asts}, state}
+      {:ok, {@operator_names[unquote(op)], [ln: state.ln], asts}, state}
+    end
+  end)
+
+  Enum.each(@functions, fn fun ->
+    defp gen_ast(["(", unquote(to_string(fun)) | args], t_lines, state) do
+      {:ok, asts, state} =
+        args
+        |> get_scope_tokens([], 0)
+        |> split_args([], [], 0)
+        |> gen_args_ast(t_lines, state, [])
+
+      {:ok, {unquote(fun), [ln: state.ln], asts}, state}
     end
   end)
 
@@ -213,7 +230,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
       |> split_args([], [], 0)
       |> gen_args_ast(t_lines, state, [])
 
-    {:ok, {:not, [], asts}, state}
+    {:ok, {:not, [ln: state.ln], asts}, state}
   end
 
   defp gen_ast(["(" | args], t_lines, state) do

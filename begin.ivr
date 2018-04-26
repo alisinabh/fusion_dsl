@@ -5,11 +5,13 @@ SOUNDS: ifilmmulti
 
 def main:
   #play 'salam', 1 , 2 == 2
-  $salam = 1
-  $salam2 = (1 + 2) * 3 < 2
+  $salam = %'{"mobile": "$tel"}'
+  play 'vwelc' + (rand 1, 5) + (rand 10, 50)
+  $obj = %'{"mobile": "$tel"}'
+  #@db.find.account %'{"mobile": "09120246513"}'
 
 def alisina:
-  $alisina_name = (!(1 == 1))
+  $alisina_name = 1 == 1
   # [4, "(", "/=", $salam2", "," , "(", "/+", "(", "/+" 1, ",", 2, ")", ",", 3, ")", ")"]
   # $salam2 = 'hello'
   # $var1 = 1235.2
