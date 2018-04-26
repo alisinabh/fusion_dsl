@@ -6,7 +6,10 @@ SOUNDS: ifilmmulti
 def main:
   #play 'salam', 1 , 2 == 2
   $salam = 1
-  $salam2 = 1 + 2 * 3 - 5 *5 - 2*2
+  $salam2 = (1 + 2) * 3 < 2
+
+def alisina:
+  $alisina_name = (!(1 == 1))
   # [4, "(", "/=", $salam2", "," , "(", "/+", "(", "/+" 1, ",", 2, ")", ",", 3, ")", ")"]
   # $salam2 = 'hello'
   # $var1 = 1235.2

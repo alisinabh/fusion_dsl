@@ -12,18 +12,23 @@ defmodule IvroneDsl.Processor.Lexer do
     "play",
     "keycheck",
     "return",
-    "rand"
+    "rand",
+    "!"
   ]
   @lang_ops [
     ",",
     "+",
     "-",
     "/",
+    "%",
     "*",
     "==",
     "!=",
     "=",
-    "!",
+    ">",
+    "<",
+    ">=",
+    "<=",
     "(",
     ")"
   ]
@@ -95,6 +100,7 @@ defmodule IvroneDsl.Processor.Lexer do
   # Normalizes string (Such as line endings)
   defp normalize(code) do
     code = String.replace(code, "\r\n", "\n")
+
     if String.ends_with?(code, "\n") do
       code
     else
@@ -135,10 +141,10 @@ defmodule IvroneDsl.Processor.Lexer do
       cond do
         Regex.match?(@r_fnclosoure, rest) ->
           do_tokenize(rest, [unquote(id) | acc])
+
         true ->
           do_tokenize(inject_ending(rest), ["(", unquote(id) | acc])
       end
-
     end
   end)
 

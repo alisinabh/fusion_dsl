@@ -15,7 +15,21 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   @clause_beginners ["if"]
   @noops ["else", "noop"]
-  @operators ["*", "/", "%", "+", "-", "=", "==", "<=", ">=", "<", ">"]
+  @operators ["*", "/", "%", "+", "-", "==", "!=", "<=", ">=", "<", ">", "="]
+  @operator_names %{
+    "*" => :mult,
+    "/" => :div,
+    "%" => :mod,
+    "+" => :add,
+    "-" => :sub,
+    "==" => :eq,
+    "!=" => :neq,
+    "<=" => :lte,
+    ">=" => :gte,
+    "<" => :lt,
+    ">" => :gt,
+    "=" => :eq
+  }
 
   @doc """
   Generates an ast array of program
@@ -180,44 +194,41 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, num, state}
   end
 
-  defp gen_ast(["(", "/=" | args], t_lines, state) do
+  Enum.each(@operators, fn op ->
+    defp gen_ast(["(", "/#{unquote(op)}" | args], t_lines, state) do
+      {:ok, asts, state} =
+        args
+        |> get_scope_tokens([], 0)
+        |> split_args([], [], 0)
+        |> gen_args_ast(t_lines, state, [])
+
+      {:ok, {@operator_names[unquote(op)], [], asts}, state}
+    end
+  end)
+
+  defp gen_ast(["(", "!" | args], t_lines, state) do
     {:ok, asts, state} =
       args
       |> get_scope_tokens([], 0)
       |> split_args([], [], 0)
       |> gen_args_ast(t_lines, state, [])
 
-    {:ok, {:eq, [], asts}, state}
+    {:ok, {:not, [], asts}, state}
   end
 
-  defp gen_ast(["(", "/+" | args], t_lines, state) do
-    {:ok, asts, state} =
+  defp gen_ast(["(" | args], t_lines, state) do
+    sp_args =
       args
       |> get_scope_tokens([], 0)
       |> split_args([], [], 0)
-      |> gen_args_ast(t_lines, state, [])
 
-    {:ok, {:add, [], asts}, state}
-  end
+    case sp_args do
+      [single] ->
+        {:ok, ast, state} = gen_ast(single, t_lines, state)
 
-  defp gen_ast(["(", "/-" | args], t_lines, state) do
-    {:ok, asts, state} =
-      args
-      |> get_scope_tokens([], 0)
-      |> split_args([], [], 0)
-      |> gen_args_ast(t_lines, state, [])
-
-    {:ok, {:sub, [], asts}, state}
-  end
-
-  defp gen_ast(["(", "/*" | args], t_lines, state) do
-    {:ok, asts, state} =
-      args
-      |> get_scope_tokens([], 0)
-      |> split_args([], [], 0)
-      |> gen_args_ast(t_lines, state, [])
-
-    {:ok, {:mult, [], asts}, state}
+      _ when is_list(sp_args) ->
+        {:ok, asts, state} = gen_args_ast(args, t_lines, state, [])
+    end
   end
 
   defp gen_args_ast([arg | t], t_lines, state, asts) do
