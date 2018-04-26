@@ -11,11 +11,27 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   alias IvroneDsl.Processor.Program
 
-  @default_state %{proc: nil, clause_if: nil, prog: %Program{}}
+  @default_state %{proc: nil, ln: 0, prog: %Program{}}
 
   @clause_beginners ["if"]
   @noops ["else", "noop"]
-  @operators ["=", "==", "<=", ">=", "<", ">", "+", "-", "*", "/", "%"]
+  @operators ["*", "/", "%", "+", "-", "==", "!=", "<=", ">=", "<", ">", "="]
+  @operator_names %{
+    "*" => :mult,
+    "/" => :div,
+    "%" => :mod,
+    "+" => :add,
+    "-" => :sub,
+    "==" => :eq,
+    "!=" => :neq,
+    "<=" => :lte,
+    ">=" => :gte,
+    "<" => :lt,
+    ">" => :gt,
+    "=" => :eq
+  }
+
+  @functions [:play, :keycheck, :rand]
 
   @doc """
   Generates an ast array of program
@@ -29,8 +45,9 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   defp do_generate_ast([[line_number | raw_line] | t], state) do
+    state = Map.put(state, :ln, line_number)
     line = reorder_line(raw_line)
-    {:ok, ast, new_state} = glast(line, t, state)
+    {:ok, ast, new_state} = gen_ast(line, t, state)
 
     case ast do
       nil ->
@@ -48,51 +65,92 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   def reorder_line(line) do
     line
-    |> Enum.reverse()
-    |> do_reorder_operators([])
+    |> do_reorder_operators(@operators, [])
+  end
+
+  defp do_reorder_operators([token | t], [op | _] = ops, acc) when op == token do
+    acc = insert_operator(acc, token, [], 0)
+    {:ok, t_count} = close_scope(t, 0, 0)
+    t = List.insert_at(t, t_count, ")")
+    do_reorder_operators(t, ops, ["," | acc])
+  end
+
+  defp do_reorder_operators([token | t], ops, acc) do
+    do_reorder_operators(t, ops, [token | acc])
+  end
+
+  defp do_reorder_operators([], [_op | top], acc) do
+    do_reorder_operators(Enum.reverse(acc), top, [])
+  end
+
+  defp do_reorder_operators([], [], acc) do
+    Enum.reverse(acc)
+  end
+
+  defp close_scope(["(" | t], in_count, token_count) do
+    close_scope(t, in_count + 1, token_count + 1)
+  end
+
+  defp close_scope([")" | t], in_count, token_count) when in_count > 0 do
+    close_scope(t, in_count - 1, token_count + 1)
+  end
+
+  defp close_scope([_ | t], in_count, token_count) when in_count > 0 do
+    close_scope(t, in_count, token_count + 1)
   end
 
   Enum.each(@operators, fn op ->
-    defp do_reorder_operators([unquote(op) | t], acc) do
-      t = insert_operator(t, unquote(op), [])
-      do_reorder_operators(t, ["," | acc])
+    defp close_scope([unquote(op) | t], in_count, token_count) do
+      close_scope(t, in_count, token_count + 1)
     end
   end)
 
-  defp do_reorder_operators([token | t], acc) do
-    do_reorder_operators(t, [token | acc])
+  defp close_scope(_, 0, token_count) do
+    {:ok, token_count + 1}
   end
 
-  defp do_reorder_operators([], acc) do
-    acc
-  end
-
-  defp insert_operator([], operator, acc) do
+  defp insert_operator([], operator, acc, 0) do
     [operator | acc]
   end
 
-  defp insert_operator([")" | t], operator, acc) do
-    insert_operator(t, operator, [")" | acc])
+  defp insert_operator(["(" | t], operator, acc, 1) do
+    insert_operator_skip(["(", "/" <> operator, "(" | acc], t)
   end
 
-  defp insert_operator([<<".", _::binary>> = h | t], operator, acc) do
-    insert_operator(t, operator, [h | acc])
+  defp insert_operator(["(" | t], operator, acc, in_count) do
+    insert_operator(t, operator, ["(" | acc], in_count - 1)
   end
 
-  defp insert_operator([left | t], operator, acc) do
-    insert_operator_skip(["/" <> operator, left | acc], t)
+  defp insert_operator([")" | t], operator, acc, in_count) do
+    insert_operator(t, operator, [")" | acc], in_count + 1)
   end
 
-  defp insert_operator_skip(acc, []) do
-    Enum.reverse(acc)
+  defp insert_operator([h | t], operator, acc, in_count) when in_count > 0 do
+    insert_operator(t, operator, [h | acc], in_count)
+  end
+
+  defp insert_operator([<<".", _::binary>> = h | t], operator, acc, in_count) do
+    insert_operator(t, operator, [h | acc], in_count)
+  end
+
+  # defp insert_operator(["," | t], operator, acc, in_count) do
+  #   insert_operator(t, operator, ["," | acc], in_count)
+  # end
+
+  defp insert_operator([left | t], operator, acc, 0) do
+    insert_operator_skip(["(", "/" <> operator, left | acc], t)
   end
 
   defp insert_operator_skip(acc, [h | t]) do
     insert_operator_skip([h | acc], t)
   end
 
-  # glast = Generate Line AST
-  defp glast(["def", str_proc_name], _tail, state) do
+  defp insert_operator_skip(acc, []) do
+    Enum.reverse(acc)
+  end
+
+  # gen_ast = Generate AST
+  defp gen_ast(["def", str_proc_name], _t_lines, state) do
     proc_name = String.to_atom(str_proc_name)
 
     cur_proces =
@@ -111,8 +169,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, nil, new_state}
   end
 
-  defp glast(["if" | if_data], tail, state) do
-    case find_end_else(tail) do
+  defp gen_ast(["if" | if_data], t_lines, state) do
+    case find_end_else(t_lines) do
       {:ok, skip_amount} ->
         if_data
 
@@ -121,21 +179,118 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end
 
-  defp glast([<<"$", var::binary>>, "=" | t], tail, state) do
-    {:ok, ast, state} = glast(t, tail, state)
-    {:ok, {:set_var, [], [var, ast]}, state}
+  # Variables
+  defp gen_ast([<<"$", var::binary>> | t], _t_lines, state) do
+    {:ok, {:var, [ln: state.ln], [var]}, state}
   end
 
-  defp glast([<<"$", var::binary>> | t], _tail, state) do
-    {:ok, {:get_var, [], [var]}, state}
-  end
-
-  defp glast([<<"'", str::binary>> | t], tail, state) do
+  # Strings
+  defp gen_ast([<<"'", str::binary>> | t], _t_lines, state) do
     {:ok, String.slice(str, 0, String.length(str) - 1), state}
   end
 
-  defp glast([num | t], tail, state) when is_number(num) do
+  # Json objects
+  defp gen_ast([<<"%'", str::binary>> | t], _t_lines, state) do
+    {:ok, {:json, [ln: state.ln], String.slice(str, 0, String.length(str) - 1)}, state}
+  end
+
+  # Numbers
+  defp gen_ast([num | t], _t_lines, state) when is_number(num) do
     {:ok, num, state}
+  end
+
+  Enum.each(@operators, fn op ->
+    defp gen_ast(["(", "/#{unquote(op)}" | args], t_lines, state) do
+      {:ok, asts, state} =
+        args
+        |> get_scope_tokens([], 0)
+        |> split_args([], [], 0)
+        |> gen_args_ast(t_lines, state, [])
+
+      {:ok, {@operator_names[unquote(op)], [ln: state.ln], asts}, state}
+    end
+  end)
+
+  Enum.each(@functions, fn fun ->
+    defp gen_ast(["(", unquote(to_string(fun)) | args], t_lines, state) do
+      {:ok, asts, state} =
+        args
+        |> get_scope_tokens([], 0)
+        |> split_args([], [], 0)
+        |> gen_args_ast(t_lines, state, [])
+
+      {:ok, {unquote(fun), [ln: state.ln], asts}, state}
+    end
+  end)
+
+  defp gen_ast(["(", "!" | args], t_lines, state) do
+    {:ok, asts, state} =
+      args
+      |> get_scope_tokens([], 0)
+      |> split_args([], [], 0)
+      |> gen_args_ast(t_lines, state, [])
+
+    {:ok, {:not, [ln: state.ln], asts}, state}
+  end
+
+  defp gen_ast(["(" | args], t_lines, state) do
+    sp_args =
+      args
+      |> get_scope_tokens([], 0)
+      |> split_args([], [], 0)
+
+    case sp_args do
+      [single] ->
+        {:ok, ast, state} = gen_ast(single, t_lines, state)
+
+      _ when is_list(sp_args) ->
+        {:ok, asts, state} = gen_args_ast(args, t_lines, state, [])
+    end
+  end
+
+  defp gen_args_ast([arg | t], t_lines, state, asts) do
+    {:ok, ast, state} = gen_ast(arg, t_lines, state)
+    gen_args_ast(t, t_lines, state, [ast | asts])
+  end
+
+  defp gen_args_ast([], _, state, asts) do
+    {:ok, Enum.reverse(asts), state}
+  end
+
+  defp get_scope_tokens(["(" | t], acc, in_count) do
+    get_scope_tokens(t, ["(" | acc], in_count + 1)
+  end
+
+  defp get_scope_tokens([")" | t], acc, 0) do
+    Enum.reverse(acc)
+  end
+
+  defp get_scope_tokens([")" | t], acc, in_count) do
+    get_scope_tokens(t, [")" | acc], in_count - 1)
+  end
+
+  defp get_scope_tokens([token | t], acc, in_count) do
+    get_scope_tokens(t, [token | acc], in_count)
+  end
+
+  defp split_args(["(" | t], acc, f_acc, in_count) do
+    split_args(t, acc, ["(" | f_acc], in_count + 1)
+  end
+
+  defp split_args([")" | t], acc, f_acc, in_count) do
+    split_args(t, acc, [")" | f_acc], in_count - 1)
+  end
+
+  defp split_args(["," | t], acc, f_acc, 0) do
+    split_args(t, [Enum.reverse(f_acc) | acc], [], 0)
+  end
+
+  defp split_args([arg | t], acc, f_acc, in_count) do
+    split_args(t, acc, [arg | f_acc], in_count)
+  end
+
+  defp split_args([], acc, f_acc, 0) do
+    Enum.reverse([Enum.reverse(f_acc) | acc])
   end
 
   defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0)

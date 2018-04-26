@@ -4,11 +4,38 @@ DB: IFilmGame
 SOUNDS: ifilmmulti
 
 def main:
-  $salam = 1
-  $salam2 = 'hello'
-  $var1 = 1235.2
-  $salam2
+  #play 'salam', 1 , 2 == 2
+  $salam = %'{"mobile": "$tel"}'
+  play 'vwelc' + (rand 1, 5) + (rand 10, 50)
+  $obj = %'{"mobile": "$tel"}'
+  #@db.find.account %'{"mobile": "09120246513"}'
+
+def alisina:
+  $alisina_name = 1 == 1
+  # [4, "(", "/=", $salam2", "," , "(", "/+", "(", "/+" 1, ",", 2, ")", ",", 3, ")", ")"]
+  # $salam2 = 'hello'
+  # $var1 = 1235.2
+  # $salam2
 
 
 # if $salam == 'salam'
 # salam , $salam == if
+
+# Usecases of operators
+# 1 == 2
+# $salam == 2
+# $salam["khodafez"] == @is_mobile
+# if 1 == 2 do
+#   noop
+# end
+# play "salam" + "cheroti" + "khoobam"
+# # {:play, [{:plus, ["salam", {:plus, ["cheroti", "khoobam"]}]}]}
+# $a = 2 + 2 * 4
+# $a = 2 + \* (2, 4)
+# # {:set_var, [{:plus, [2, {:mult, [2, 4]}]}]}
+# $a = 2 * 4 + 2
+# # {:set_var, [{:mult, [2, ]}]}
+# $a = (2 + 4) + 2
+# ["/=", "(", "$a", "/+", "(", "/+", "(", 2, ",", 4 ")", ",", 2")"]
+# {:set_var, ["a", {:add, [{:add, [2, 4]}], 4}]}
+# # {:set_var, [{:plus, [{:plus, [2, 4]}, 2]}]}
