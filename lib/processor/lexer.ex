@@ -12,18 +12,23 @@ defmodule IvroneDsl.Processor.Lexer do
     "play",
     "keycheck",
     "return",
-    "rand"
+    "rand",
+    "!"
   ]
   @lang_ops [
     ",",
     "+",
     "-",
     "/",
+    "%",
     "*",
     "==",
     "!=",
     "=",
-    "!",
+    ">",
+    "<",
+    ">=",
+    "<=",
     "(",
     ")"
   ]
@@ -35,6 +40,8 @@ defmodule IvroneDsl.Processor.Lexer do
   @r_string ~r/[^\\](\')/
   @r_var ~r/\A[A-Za-z]+[A-Za-z0-9\_]+[.]?[A-Za-z0-9\_]*/
   @r_goto ~r/\Agoto[ \t]+([A-Za-z0-9\-_]+)/
+  @r_fnclosoure ~r/\A[ \t]+\(/
+  @r_eol ~r/\n/
 
   @doc """
   Tokenizes an IVRONE Code
@@ -92,7 +99,13 @@ defmodule IvroneDsl.Processor.Lexer do
 
   # Normalizes string (Such as line endings)
   defp normalize(code) do
-    String.replace(code, "\r\n", "\n")
+    code = String.replace(code, "\r\n", "\n")
+
+    if String.ends_with?(code, "\n") do
+      code
+    else
+      code <> "\n"
+    end
   end
 
   # Headers finished
@@ -125,7 +138,13 @@ defmodule IvroneDsl.Processor.Lexer do
   # Handle Lang identifires
   Enum.each(@lang_ids, fn id ->
     defp do_tokenize(<<unquote(id), rest::binary>>, acc) do
-      do_tokenize(rest, [unquote(id) | acc])
+      cond do
+        Regex.match?(@r_fnclosoure, rest) ->
+          do_tokenize(rest, [unquote(id) | acc])
+
+        true ->
+          do_tokenize(inject_ending(rest), [unquote(id), "(" | acc])
+      end
     end
   end)
 
@@ -141,6 +160,11 @@ defmodule IvroneDsl.Processor.Lexer do
       do_tokenize_num(unquote(str) <> rest, acc, false)
     end
   end)
+
+  # handle json objects
+  defp do_tokenize(<<"%'", rest::binary>>, acc) do
+    do_tokenize_string(rest, acc, "%'")
+  end
 
   # Handle operators
   Enum.each(@lang_ops, fn op ->
@@ -166,11 +190,6 @@ defmodule IvroneDsl.Processor.Lexer do
   # handle strings
   defp do_tokenize(<<"'", rest::binary>>, acc) do
     do_tokenize_string(rest, acc, "'")
-  end
-
-  # handle json objects
-  defp do_tokenize(<<"%'", rest::binary>>, acc) do
-    do_tokenize_string(rest, acc, "%'")
   end
 
   # Ignores space
@@ -287,17 +306,7 @@ defmodule IvroneDsl.Processor.Lexer do
     [x | acc]
   end
 
-  defp p_line(acc) do
-    "\nLine: #{get_line_number(acc)}"
-  end
-
-  defp get_line_number(acc) do
-    Enum.reduce(acc, 1, fn l, acc ->
-      if l == "\n" do
-        acc + 1
-      else
-        acc
-      end
-    end)
+  defp inject_ending(string) do
+    Regex.replace(@r_eol, string, ")\n", global: false)
   end
 end
