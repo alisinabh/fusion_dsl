@@ -1,7 +1,7 @@
 FORMAT: IVRONE1
-NAME: IFilmGame
-DB: IFilmGame
-SOUNDS: ifilmmulti
+NAME: TestApp
+DB: TestDb
+SOUNDS: testsounddir
 
 def main:
   play 'vwelcome' + (rand 1, 50)

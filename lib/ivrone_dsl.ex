@@ -3,23 +3,9 @@ defmodule IvroneDsl do
   Documentation for IvroneDsl.
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> IvroneDsl.hello
-      :world
-
-  """
-  def hello do
-    {:ok, config, tokens} = IvroneDsl.Processor.Lexer.tokenize(File.read!("begin.ivr"))
-    sp = IvroneDsl.Processor.Lexer.split_by_lines(tokens)
-  end
-
   def test_ast_begin do
     {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(File.read!("begin.ivr"))
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens)
+    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
     IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
   end
 end

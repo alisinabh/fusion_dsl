@@ -14,7 +14,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
   @default_state %{proc: nil, ln: 0, prog: %Program{}}
 
   @clause_beginners ["if"]
-  @noops ["else", "noop"]
+  @noops ["end", "else", "noop"]
   @operators ["*", "/", "%", "+", "-", "==", "!=", "<=", ">=", "<", ">", "="]
   @operator_names %{
     "*" => :mult,
@@ -31,7 +31,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
     "=" => :eq
   }
 
-  @functions [:play, :keycheck, :rand]
+  @functions [:play, :keycheck, :rand, :db_find, :db_insert, :db_update, :db_remove]
 
   @doc """
   Generates an ast array of program
@@ -47,11 +47,11 @@ defmodule IvroneDsl.Processor.AstProcessor do
   defp do_generate_ast([[line_number | raw_line] | t], state) do
     state = Map.put(state, :ln, line_number)
     line = reorder_line(raw_line)
-    {:ok, ast, new_state} = gen_ast(line, t, state)
+    {:ok, ast, state} = gen_ast(line, t, state)
 
     case ast do
       nil ->
-        do_generate_ast(t, new_state)
+        do_generate_ast(t, state)
 
       ast ->
         ast_state = insert_ast_in_state(state, ast)
@@ -107,6 +107,10 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   defp close_scope(_, 0, token_count) do
     {:ok, token_count + 1}
+  end
+
+  defp close_scope([], _, token_count) do
+    {:ok, token_count}
   end
 
   defp insert_operator([], operator, acc, 0) do
@@ -172,7 +176,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
   defp gen_ast(["if" | if_data], t_lines, state) do
     case find_end_else(t_lines) do
       {:ok, skip_amount} ->
-        if_data
+        {:ok, if_cond_ast, state} = gen_ast(if_data, t_lines, state)
+        {:ok, {:jump_not, [ln: state.ln], [if_cond_ast, skip_amount]}, state}
 
       :not_found ->
         raise("'end' for if not found!")
@@ -182,6 +187,11 @@ defmodule IvroneDsl.Processor.AstProcessor do
   # Variables
   defp gen_ast([<<"$", var::binary>> | t], _t_lines, state) do
     {:ok, {:var, [ln: state.ln], [var]}, state}
+  end
+
+  # Database operations
+  defp gen_ast([<<"@db.", var::binary>> | t], _t_lines, state) do
+    {:ok, {:db_op, [ln: state.ln], String.split(var, ".")}, state}
   end
 
   # Strings
@@ -241,12 +251,19 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
     case sp_args do
       [single] ->
-        {:ok, ast, state} = gen_ast(single, t_lines, state)
+        gen_ast(single, t_lines, state)
 
       _ when is_list(sp_args) ->
-        {:ok, asts, state} = gen_args_ast(args, t_lines, state, [])
+        gen_args_ast(args, t_lines, state, [])
     end
   end
+
+  # Operations that actualy does not do anything at runtime
+  Enum.each(@noops, fn noop ->
+    defp gen_ast([unquote(noop) | _], _t_lines, state) do
+      {:ok, {:noop, [ln: state.ln], []}, state}
+    end
+  end)
 
   defp gen_args_ast([arg | t], t_lines, state, asts) do
     {:ok, ast, state} = gen_ast(arg, t_lines, state)
@@ -262,6 +279,10 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   defp get_scope_tokens([")" | t], acc, 0) do
+    Enum.reverse(acc)
+  end
+
+  defp get_scope_tokens([], acc, 0) do
     Enum.reverse(acc)
   end
 
@@ -295,11 +316,11 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0)
 
-  defp find_end_else([[_, "else"] | t], 0, acc) do
+  defp find_end_else([[_, "(", "else", ")"] | t], 0, acc) do
     {:ok, acc}
   end
 
-  defp find_end_else([[_, "end"] | t], 0, acc) do
+  defp find_end_else([[_, "(", "end", ")"] | t], 0, acc) do
     {:ok, acc}
   end
 
