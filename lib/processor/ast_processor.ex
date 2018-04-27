@@ -215,7 +215,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   # Numbers
-  defp gen_ast([num | t], _t_lines, state) when is_number(num) do
+  defp gen_ast([num | _t], _t_lines, state) when is_number(num) do
     {:ok, num, state}
   end
 
@@ -288,7 +288,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
     get_scope_tokens(t, ["(" | acc], in_count + 1)
   end
 
-  defp get_scope_tokens([")" | t], acc, 0) do
+  defp get_scope_tokens([")" | _t], acc, 0) do
     Enum.reverse(acc)
   end
 
@@ -326,23 +326,23 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0)
 
-  defp find_end_else([[_, "(", "else", ")"] | t], 0, acc) do
-    {:ok, acc}
-  end
-
-  defp find_end_else([[_, "(", "end", ")"] | t], 0, acc) do
-    {:ok, acc}
-  end
-
-  defp find_end_else([[_, "end"] | t], inn, acc) do
-    find_end_else(t, inn - 1, acc + 1)
-  end
-
   Enum.each(@clause_beginners, fn cl ->
-    defp find_end_else([[_, unquote(cl) | _] | t], inn, acc) do
+    defp find_end_else([[_, "(", unquote(cl) | _] | t], inn, acc) do
       find_end_else(t, inn + 1, acc + 1)
     end
   end)
+
+  defp find_end_else([[_, "(", "else", ")"] | _t], 0, acc) do
+    {:ok, acc + 1}
+  end
+
+  defp find_end_else([[_, "(", "end", ")"] | _t], 0, acc) do
+    {:ok, acc + 1}
+  end
+
+  defp find_end_else([[_, "(", "end", ")"] | t], inn, acc) when inn > 0 do
+    find_end_else(t, inn - 1, acc + 1)
+  end
 
   defp find_end_else([[_, "def", _]], _, _) do
     :not_found

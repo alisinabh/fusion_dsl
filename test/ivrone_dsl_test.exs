@@ -5,23 +5,20 @@ defmodule IvroneDslTest do
   @full_tokens_file "test/samples/full_tokens.ivr1"
   @scopes_file "test/samples/scopes.ivr1"
 
-  @full_tokens_first_ln 7
-  @full_tokens_last_ln 33
-
-  #lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-  #IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+  @full_tokens_first_ln 6
+  @full_tokens_last_ln 37
 
   @correct_config %{
     db: "TestDb",
     format: "IVRONE1",
     name: "TestApp",
     sounds: "testsounddir",
-    start_code: 7
+    start_code: 6
   }
 
   test "lexical analyser works on all types of tokens" do
     file_data = File.read!(@full_tokens_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    assert {:ok, _conf, _tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
   end
 
   test "line splitter is correct on line numbers" do
@@ -40,17 +37,17 @@ defmodule IvroneDslTest do
     file_data = File.read!(@full_tokens_file)
     assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
     lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-    assert {:ok, ast} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    assert {:ok, _ast} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
   end
 
   test "no errors generated in different scope complexities" do
     file_data = File.read!(@scopes_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    assert {:ok, _conf, _tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
   end
 
   test "Headers are parsed correctly" do
     file_data = File.read!(@full_tokens_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    assert {:ok, conf, _tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
     assert @correct_config = conf
   end
 end
