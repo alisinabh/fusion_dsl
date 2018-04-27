@@ -114,7 +114,7 @@ defmodule IvroneDsl.Processor.Lexer do
 
   # Headers finished
   defp tokenize_headers(<<"\n", code::binary>>, acc, ln) do
-    {:ok, Map.put(acc, :start_code, ln + 1), code}
+    {:ok, Map.put(acc, :start_code, ln + 2), code}
   end
 
   # Headers process

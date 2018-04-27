@@ -28,10 +28,10 @@ defmodule IvroneDsl.Processor.AstProcessor do
     ">=" => :gte,
     "<" => :lt,
     ">" => :gt,
-    "=" => :eq
+    "=" => :set
   }
 
-  @functions [:play, :keycheck, :rand, :db_find, :db_insert, :db_update, :db_remove]
+  @functions [:play, :keycheck, :rand, :db_find, :db_insert, :db_update, :db_remove, :goto]
 
   @doc """
   Generates an ast array of program
@@ -185,22 +185,32 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   # Variables
-  defp gen_ast([<<"$", var::binary>> | t], _t_lines, state) do
+  defp gen_ast([<<"$", var::binary>> | _t], _t_lines, state) do
     {:ok, {:var, [ln: state.ln], [var]}, state}
   end
 
-  # Database operations
-  defp gen_ast([<<"@db.", var::binary>> | t], _t_lines, state) do
-    {:ok, {:db_op, [ln: state.ln], String.split(var, ".")}, state}
+  # Get env variables
+  defp gen_ast([<<"@", var::binary>> | _t], _t_lines, state) do
+    {:ok, {:get_system, [ln: state.ln], [var]}, state}
+  end
+
+  # Goto operation
+  defp gen_ast(["goto", proc_name], _t_lines, state) do
+    {:ok, {:goto, [ln: state.ln], [String.to_atom(proc_name)]}, state}
+  end
+
+  # Goto operation
+  defp gen_ast(["nil"], _t_lines, state) do
+    {:ok, nil, state}
   end
 
   # Strings
-  defp gen_ast([<<"'", str::binary>> | t], _t_lines, state) do
+  defp gen_ast([<<"'", str::binary>> | _t], _t_lines, state) do
     {:ok, String.slice(str, 0, String.length(str) - 1), state}
   end
 
   # Json objects
-  defp gen_ast([<<"%'", str::binary>> | t], _t_lines, state) do
+  defp gen_ast([<<"%'", str::binary>> | _t], _t_lines, state) do
     {:ok, {:json, [ln: state.ln], String.slice(str, 0, String.length(str) - 1)}, state}
   end
 
