@@ -31,7 +31,18 @@ defmodule IvroneDsl.Processor.AstProcessor do
     "=" => :set
   }
 
-  @functions [:play, :keycheck, :rand, :db_find, :db_insert, :db_update, :db_remove, :goto]
+  @functions [
+    :play,
+    :keycheck,
+    :rand,
+    :db_find,
+    :db_insert,
+    :db_update,
+    :db_remove,
+    :goto,
+    :to_number,
+    :to_string
+  ]
 
   @doc """
   Generates an ast array of program
@@ -47,6 +58,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
   defp do_generate_ast([[line_number | raw_line] | t], state) do
     state = Map.put(state, :ln, line_number)
     line = reorder_line(raw_line)
+
     {:ok, ast, state} = gen_ast(line, t, state)
 
     case ast do
@@ -65,7 +77,24 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   def reorder_line(line) do
     line
+    |> insert_array_scopes([])
     |> do_reorder_operators(@operators, [])
+  end
+
+  defp insert_array_scopes(["[" | t], acc) do
+    insert_array_scopes(t, ["[", "(" | acc])
+  end
+
+  defp insert_array_scopes(["]" | t], acc) do
+    insert_array_scopes(t, [")", "]" | acc])
+  end
+
+  defp insert_array_scopes([h | t], acc) do
+    insert_array_scopes(t, [h | acc])
+  end
+
+  defp insert_array_scopes([], acc) do
+    Enum.reverse(acc)
   end
 
   defp do_reorder_operators([token | t], [op | _] = ops, acc) when op == token do
@@ -219,6 +248,17 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, num, state}
   end
 
+  # Arrays
+  defp gen_ast(["(", "[" | arr_data], t_lines, state) do
+    {:ok, asts, state} =
+      arr_data
+      |> get_scope_tokens([], 0)
+      |> split_args([], [], 0)
+      |> gen_args_ast(t_lines, state, [])
+
+    {:ok, asts, state}
+  end
+
   Enum.each(@operators, fn op ->
     defp gen_ast(["(", "/#{unquote(op)}" | args], t_lines, state) do
       {:ok, asts, state} =
@@ -288,6 +328,14 @@ defmodule IvroneDsl.Processor.AstProcessor do
     get_scope_tokens(t, ["(" | acc], in_count + 1)
   end
 
+  defp get_scope_tokens(["[" | t], acc, in_count) do
+    get_scope_tokens(t, ["[" | acc], in_count + 1)
+  end
+
+  defp get_scope_tokens(["]" | _t], acc, 0) do
+    Enum.reverse(acc)
+  end
+
   defp get_scope_tokens([")" | _t], acc, 0) do
     Enum.reverse(acc)
   end
@@ -298,6 +346,10 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   defp get_scope_tokens([")" | t], acc, in_count) do
     get_scope_tokens(t, [")" | acc], in_count - 1)
+  end
+
+  defp get_scope_tokens(["]" | t], acc, in_count) do
+    get_scope_tokens(t, ["]" | acc], in_count - 1)
   end
 
   defp get_scope_tokens([token | t], acc, in_count) do

@@ -17,6 +17,8 @@ defmodule IvroneDsl.Processor.Lexer do
     "db_remove",
     "db_insert",
     "db_update",
+    "to_number",
+    "to_string",
     "!"
   ]
   @lang_ops [
@@ -34,7 +36,9 @@ defmodule IvroneDsl.Processor.Lexer do
     ">=",
     "<=",
     "(",
-    ")"
+    ")",
+    "[",
+    "]"
   ]
   @lang_var ["$", "@", "."]
 
