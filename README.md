@@ -1,21 +1,44 @@
 # IvroneDsl
 
-**TODO: Add description**
+Ivrone is a dynamic framework which enables non-coders to develop asterisk
+fast agi programs.
 
-## Installation
+**Ivrone is still under heavy development and change. refere to [Todo list](#todo-list)**
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `ivrone_dsl` to your list of dependencies in `mix.exs`:
+## Todo list
 
-```elixir
-def deps do
-  [
-    {:ivrone_dsl, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/ivrone_dsl](https://hexdocs.pm/ivrone_dsl).
-
+### Logical functinalities
+ - [x] basic types (numbers, boolean, strings)
+ - [x] Complex types (maps, arrays)
+ - [x] Addition of numbers
+ - [x] Additions of Strings
+ - [ ] Addition of arrays
+ - [ ] Appending to arrays
+ - [ ] Subtract numbers
+ - [ ] Divide numbers
+ - [ ] Multiply numbers
+ - [ ] Remaining of division of numbers
+ - [x] Defining mutable variables
+ - [ ] Defining immutable variables
+ - [x] Seting variables
+ - [x] Getting variables
+ - [ ] Destroy variables
+ - [ ] Getting map object value
+ - [ ] Setting map object value
+ - [ ] Remove object from map
+ - [ ] String contains
+ - [ ] String index_of
+ - [ ] String index_of_last
+ - [ ] String length
+ - [ ] String starts_with
+ - [ ] String ends_with
+ - [ ] Substring
+ - [ ] Regex match
+ - [ ] Regex replace
+ - [ ] Regex run
+ - [x] Defining procedures
+ - [ ] Calling procedures
+ - [ ] Procedure return
+ - [ ] Condition (if, else)
+ - [ ] `for` loop
+ - [ ] `while` loop
