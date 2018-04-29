@@ -41,6 +41,53 @@ defmodule IvroneDsl.Runtime.Executor do
     end
   end
 
+  defp execute_ast(prog, {:sub, ctx, args}, env) do
+    {:ok, [left, right], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_number(left) and is_number(right) ->
+        {:ok, left - right, env}
+
+      true ->
+        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+    end
+  end
+
+  defp execute_ast(prog, {:mult, ctx, args}, env) do
+    {:ok, [left, right], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_number(left) and is_number(right) ->
+        {:ok, left * right, env}
+
+      true ->
+        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+    end
+  end
+
+  defp execute_ast(prog, {:div, ctx, args}, env) do
+    {:ok, [left, right], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_number(left) and is_number(right) ->
+        {:ok, left / right, env}
+
+      true ->
+        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+    end
+  end
+
+  defp execute_ast(prog, {:mod, ctx, args}, env) do
+    {:ok, [left, right], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_number(left) and is_number(right) ->
+        {:ok, rem(left, right), env}
+      true ->
+        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+    end
+  end
+
   defp execute_ast(prog, {:set, ctx, [{:var, _, [var]}, right]}, env) do
     {:ok, right, env} = execute_ast(prog, right, env)
 
@@ -134,6 +181,10 @@ defmodule IvroneDsl.Runtime.Executor do
 
   defp execute_ast(prog, bool, env) when is_boolean(bool) do
     {:ok, bool, env}
+  end
+
+  defp execute_ast(prog, list, env) when is_list(list) do
+    {:ok, list, env}
   end
 
   defp execute_ast(prog, {_, ctx, _} = unknown, env) do

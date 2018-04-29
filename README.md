@@ -9,19 +9,25 @@ fast agi programs.
 
 ### Logical functinalities
  - [x] basic types (numbers, boolean, strings)
- - [x] Complex types (maps, arrays)
+ - [ ] define maps
+ - [x] define arrys
  - [x] Addition of numbers
  - [x] Additions of Strings
  - [ ] Addition of arrays
  - [ ] Appending to arrays
- - [ ] Subtract numbers
- - [ ] Divide numbers
- - [ ] Multiply numbers
- - [ ] Remaining of division of numbers
+ - [ ] Insert between arrays
+ - [x] Subtract numbers
+ - [x] Divide numbers
+ - [x] Multiply numbers
+ - [x] Remaining of division of numbers
  - [x] Defining mutable variables
  - [ ] Defining immutable variables
  - [x] Seting variables
  - [x] Getting variables
+ - [ ] += operator for string and numbers
+ - [ ] -= operator for numbers
+ - [ ] \*= for numbers
+ - [ ] /= for numbers
  - [ ] Destroy variables
  - [ ] Getting map object value
  - [ ] Setting map object value
@@ -42,3 +48,6 @@ fast agi programs.
  - [ ] Condition (if, else)
  - [ ] `for` loop
  - [ ] `while` loop
+ - [x] parse number strings
+ - [x] to_string numbers
+ - [ ] cast numbers to int

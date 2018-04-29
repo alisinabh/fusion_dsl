@@ -7,6 +7,11 @@ def main:
   play 'v' + 'salam', '012'
   $a = [1, 2, 3]
   $alisina = 1 + 2 + 3
+  $add = 1 + 2
+  $sub = 1 - 2
+  $mult = 1 * 2
+  $div = 1 / 2
+  $mod = 6 % 3
   $new = $alisina + (rand 1, 30)
   $final = 2 + (to_number '5')
   # hey
