@@ -37,7 +37,7 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, to_string(left) <> to_string(right), env}
 
       true ->
-        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(prog, ctx, "Add(+) is not supported for #{inspect(left)} and #{inspect(right)}")
     end
   end
 
@@ -49,7 +49,7 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left - right, env}
 
       true ->
-        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(prog, ctx, "Sub(-) is not supported for #{inspect(left)} and #{inspect(right)}")
     end
   end
 
@@ -61,7 +61,7 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left * right, env}
 
       true ->
-        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(prog, ctx, "Mult(*) is not supported for #{inspect(left)} and #{inspect(right)}")
     end
   end
 
@@ -73,7 +73,7 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left / right, env}
 
       true ->
-        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(prog, ctx, "Div(/) is not supported for #{inspect(left)} and #{inspect(right)}")
     end
   end
 
@@ -83,8 +83,9 @@ defmodule IvroneDsl.Runtime.Executor do
     cond do
       is_number(left) and is_number(right) ->
         {:ok, rem(left, right), env}
+
       true ->
-        error(prog, ctx, "Add is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(prog, ctx, "Mod(%) is not supported for #{inspect(left)} and #{inspect(right)}")
     end
   end
 
@@ -149,6 +150,30 @@ defmodule IvroneDsl.Runtime.Executor do
 
       true ->
         error(prog, ctx, "to_string is not supported for #{inspect(binary)}")
+    end
+  end
+
+  defp execute_ast(prog, {:int, ctx, [_] = args}, env) do
+    {:ok, [num], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(num) ->
+        {val, _} = Integer.parse(num)
+        {:ok, val, env}
+      is_number(num) ->
+        {:ok, trunc(num), env}
+      true ->
+        error(prog, ctx, "Cannot convert #{num} to int")
+    end
+  end
+
+  defp execute_ast(prog, {:goto, ctx, [proc]}, env) when is_atom(proc) do
+    case prog.procedures[proc] do
+      proc_asts when is_list(proc_asts) ->
+        {:end, env} = execute_procedure(prog, proc_asts, env)
+        {:ok, nil, env}
+      nil ->
+        error(prog, ctx, "Procedure #{proc} not found!")
     end
   end
 

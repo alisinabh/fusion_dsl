@@ -1,0 +1,38 @@
+FORMAT: IVRONE1
+NAME: TestApp
+DB: TestDb
+SOUNDS: testsounddir
+
+def main:
+  $result = 'Start: '
+  $result += 'ad' + 'd' + 1 + ' '
+  $a = 7
+  $b = 4
+  goto do_logics
+  $a = -3
+  goto do_logics
+  $result += 'end'
+
+def do_logics:
+  $result += $a + $b
+  $result += ','
+  $result += $a - $b
+  $result += ','
+  $result += $a * $b
+  $result += ','
+  $result += $a / $b
+  $result += ','
+  $a1 = $a
+  $b1 = $b + 1
+  $a1 += 1
+  $a1 *= 2
+  $a1 -= 4
+  $a1 /= 3
+  $result += $a1 + ',' + (int $a) + ','
+  $result += ($b1 + 6) + ','
+  $result += ' '
+  # TODO: arrays test
+  # TODO: maps test
+
+# final resilt:
+# Start: add1 11,3,28,1.75,4,4,11, 1,-7,-12,-0.75,-2.6666666666666665,-3,11, end

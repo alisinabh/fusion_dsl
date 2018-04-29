@@ -15,7 +15,29 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   @clause_beginners ["if"]
   @noops ["end", "else", "noop"]
-  @operators ["*", "/", "%", "+", "-", "==", "!=", "<=", ">=", "<", ">", "="]
+  @operators [
+    "*",
+    "/",
+    "%",
+    "+",
+    "-",
+    "==",
+    "!=",
+    "<=",
+    ">=",
+    "<",
+    ">",
+    "and",
+    "&&",
+    "or",
+    "||",
+    # "*=",
+    # "/=",
+    # "%=",
+    # "+=",
+    # "-=",
+    "="
+  ]
   @operator_names %{
     "*" => :mult,
     "/" => :div,
@@ -28,8 +50,14 @@ defmodule IvroneDsl.Processor.AstProcessor do
     ">=" => :gte,
     "<" => :lt,
     ">" => :gt,
-    "=" => :set
+    "=" => :set,
+    "and" => :and,
+    "&&" => :and,
+    "or" => :or,
+    "||" => :or,
   }
+
+  @short_setters ["+=", "-=", "*=", "/=", "%="]
 
   @functions [
     :play,
@@ -41,7 +69,9 @@ defmodule IvroneDsl.Processor.AstProcessor do
     :db_remove,
     :goto,
     :to_number,
-    :to_string
+    :to_string,
+    :int,
+    :round
   ]
 
   @doc """
@@ -78,8 +108,18 @@ defmodule IvroneDsl.Processor.AstProcessor do
   def reorder_line(line) do
     line
     |> insert_array_scopes([])
+    |> expand_short_setters()
     |> do_reorder_operators(@operators, [])
   end
+
+  Enum.each(@short_setters, fn s ->
+    defp expand_short_setters([<<"$", _::binary>> = var, unquote(s) | t]) do
+      operator = String.slice(unquote(s), 0, 1)
+      [var, "=", var, operator, "(" | t ++ [")"]]
+    end
+  end)
+
+  defp expand_short_setters(line), do: line
 
   defp insert_array_scopes(["[" | t], acc) do
     insert_array_scopes(t, ["[", "(" | acc])

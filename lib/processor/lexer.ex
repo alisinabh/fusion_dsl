@@ -19,15 +19,22 @@ defmodule IvroneDsl.Processor.Lexer do
     "db_update",
     "to_number",
     "to_string",
+    "int",
+    "round",
     "!"
   ]
   @lang_ops [
     ",",
+    "+=",
+    "-=",
+    "*=",
+    "/=",
+    "%=",
     "+",
     "-",
+    "*",
     "/",
     "%",
-    "*",
     "==",
     "!=",
     "=",
@@ -38,7 +45,11 @@ defmodule IvroneDsl.Processor.Lexer do
     "(",
     ")",
     "[",
-    "]"
+    "]",
+    "and",
+    "or",
+    "&&",
+    "||"
   ]
   @lang_var ["$", "@", "."]
 
@@ -247,7 +258,7 @@ defmodule IvroneDsl.Processor.Lexer do
 
       true ->
         # Unmatched code. error will be generated!
-        {:error, acc, bin, "Unknown expression in line!"}
+        {:error, acc, bin, "Unknown expression in line! " <> Enum.count(acc)}
     end
   end
 

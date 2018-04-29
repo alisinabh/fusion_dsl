@@ -24,10 +24,10 @@ fast agi programs.
  - [ ] Defining immutable variables
  - [x] Seting variables
  - [x] Getting variables
- - [ ] += operator for string and numbers
- - [ ] -= operator for numbers
- - [ ] \*= for numbers
- - [ ] /= for numbers
+ - [x] += operator for string and numbers
+ - [x] -= operator for numbers
+ - [x] \*= for numbers
+ - [x] /= for numbers
  - [ ] Destroy variables
  - [ ] Getting map object value
  - [ ] Setting map object value
@@ -43,11 +43,12 @@ fast agi programs.
  - [ ] Regex replace
  - [ ] Regex run
  - [x] Defining procedures
- - [ ] Calling procedures
+ - [x] Calling procedures
  - [ ] Procedure return
  - [ ] Condition (if, else)
  - [ ] `for` loop
  - [ ] `while` loop
  - [x] parse number strings
  - [x] to_string numbers
- - [ ] cast numbers to int
+ - [x] cast numbers to int
+ - [x] round floats

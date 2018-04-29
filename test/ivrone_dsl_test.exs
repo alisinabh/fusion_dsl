@@ -4,6 +4,7 @@ defmodule IvroneDslTest do
 
   @full_tokens_file "test/samples/full_tokens.ivr1"
   @scopes_file "test/samples/scopes.ivr1"
+  @logical_file "test/samples/logical.ivr1"
 
   @full_tokens_first_ln 6
   @full_tokens_last_ln 37
@@ -15,6 +16,7 @@ defmodule IvroneDslTest do
     sounds: "testsounddir",
     start_code: 6
   }
+  @correct_logic_result "Start: add1 11,3,28,1.75,4,4,11, 1,-7,-12,-0.75,-2.6666666666666665,-3,11, end"
 
   test "lexical analyser works on all types of tokens" do
     file_data = File.read!(@full_tokens_file)
@@ -49,5 +51,16 @@ defmodule IvroneDslTest do
     file_data = File.read!(@full_tokens_file)
     assert {:ok, conf, _tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
     assert @correct_config = conf
+  end
+
+  test "Logics test produce expected result" do
+    file_data = File.read!(@logical_file)
+    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+
+    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
+    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    assert %{vars: %{"result" => @correct_logic_result}}
   end
 end
