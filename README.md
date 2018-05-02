@@ -9,7 +9,7 @@ fast agi programs.
 
 ### Logical functionalities
  - [x] basic types (numbers, boolean, strings)
- - [ ] define maps
+ - [x] define maps
  - [x] define arrays
  - [x] Addition of numbers
  - [x] Additions of Strings
@@ -21,7 +21,7 @@ fast agi programs.
  - [x] Multiply numbers
  - [x] Remaining of division of numbers
  - [x] Defining mutable variables
- - [ ] Defining immutable variables
+ - [x] Defining immutable variables
  - [x] Setting variables
  - [x] Getting variables
  - [x] += operator for string and numbers
@@ -29,8 +29,8 @@ fast agi programs.
  - [x] \*= for numbers
  - [x] /= for numbers
  - [ ] Destroy variables
- - [ ] Getting map object value
- - [ ] Setting map object value
+ - [x] Getting map object value
+ - [x] Setting map object value
  - [ ] Remove object from map
  - [ ] String contains
  - [ ] String index_of

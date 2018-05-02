@@ -442,7 +442,7 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, acc, env}
 
       {:error, :not_initialized} ->
-        error(prog, ctx, "Variable #{var} is not initialized!")
+        {:error, :not_initialized}
     end
   end
 

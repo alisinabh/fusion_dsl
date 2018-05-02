@@ -59,7 +59,7 @@ defmodule IvroneDsl.Processor.Lexer do
   @r_lable ~r/\Adef[ \t]+([A-Za-z0-9\-_]+)\:[ \t]*\n/
   @r_number ~r/\A[0-9]+[\.]?[0-9]*/
   @r_string ~r/[^\\](\')/
-  @r_var ~r/\A[A-Za-z]+[A-Za-z0-9.\_]*/
+  @r_var ~r/\A[\_]?[A-Za-z]+[A-Za-z0-9.\_]*/
   @r_goto ~r/\Agoto[ \t]+([A-Za-z0-9\-_]+)/
   @r_fnclosoure ~r/\A[ \t]+\(/
   @r_eol ~r/\n/
