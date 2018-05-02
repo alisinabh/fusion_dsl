@@ -31,11 +31,6 @@ defmodule IvroneDsl.Processor.AstProcessor do
     "&&",
     "or",
     "||",
-    # "*=",
-    # "/=",
-    # "%=",
-    # "+=",
-    # "-=",
     "="
   ]
   @operator_names %{
@@ -54,7 +49,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
     "and" => :and,
     "&&" => :and,
     "or" => :or,
-    "||" => :or,
+    "||" => :or
   }
 
   @short_setters ["+=", "-=", "*=", "/=", "%="]
@@ -71,7 +66,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     :to_number,
     :to_string,
     :int,
-    :round
+    :round,
+    :not
   ]
 
   @doc """
@@ -280,7 +276,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   # Json objects
   defp gen_ast([<<"%'", str::binary>> | _t], _t_lines, state) do
-    {:ok, {:json, [ln: state.ln], String.slice(str, 0, String.length(str) - 1)}, state}
+    {:ok, {:json, [ln: state.ln], [String.slice(str, 0, String.length(str) - 1)]}, state}
   end
 
   # Numbers

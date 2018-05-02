@@ -7,10 +7,10 @@ fast agi programs.
 
 ## Todo list
 
-### Logical functinalities
+### Logical functionalities
  - [x] basic types (numbers, boolean, strings)
  - [ ] define maps
- - [x] define arrys
+ - [x] define arrays
  - [x] Addition of numbers
  - [x] Additions of Strings
  - [ ] Addition of arrays
@@ -22,7 +22,7 @@ fast agi programs.
  - [x] Remaining of division of numbers
  - [x] Defining mutable variables
  - [ ] Defining immutable variables
- - [x] Seting variables
+ - [x] Setting variables
  - [x] Getting variables
  - [x] += operator for string and numbers
  - [x] -= operator for numbers

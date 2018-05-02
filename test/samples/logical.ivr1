@@ -8,8 +8,10 @@ def main:
   $result += 'ad' + 'd' + 1 + ' '
   $a = 7
   $b = 4
+  $t = 5
   goto do_logics
   $a = -3
+  $t = 10
   goto do_logics
   $result += 'end'
 
@@ -30,9 +32,17 @@ def do_logics:
   $a1 /= 3
   $result += $a1 + ',' + (int $a) + ','
   $result += ($b1 + 6) + ','
+  $result += ($t == 2) + ','
+  $result += ($t == 5) + ','
+  $result += (5.0 == $t) + ','
+  $result += ($t < 2) + ','
+  $result += ($t >= 5) + ','
+  $result += ($t > 5) + ','
+  $result += ($t < 10) + ','
+  $result += ($t <= 5) + ','
   $result += ' '
   # TODO: arrays test
   # TODO: maps test
 
 # final resilt:
-# Start: add1 11,3,28,1.75,4,4,11, 1,-7,-12,-0.75,-2.6666666666666665,-3,11, end
+# Start: add1 11,3,28,1.75,4,4,11,false,true,true,false,true,false,true,true, 1,-7,-12,-0.75,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false, end

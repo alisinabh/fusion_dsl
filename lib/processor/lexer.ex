@@ -13,6 +13,8 @@ defmodule IvroneDsl.Processor.Lexer do
     "keycheck",
     "return",
     "rand",
+    "json_encode",
+    "json_decode",
     "db_find",
     "db_remove",
     "db_insert",
@@ -21,7 +23,7 @@ defmodule IvroneDsl.Processor.Lexer do
     "to_string",
     "int",
     "round",
-    "!"
+    "not"
   ]
   @lang_ops [
     ",",
@@ -38,10 +40,10 @@ defmodule IvroneDsl.Processor.Lexer do
     "==",
     "!=",
     "=",
-    ">",
-    "<",
     ">=",
     "<=",
+    ">",
+    "<",
     "(",
     ")",
     "[",
@@ -258,7 +260,7 @@ defmodule IvroneDsl.Processor.Lexer do
 
       true ->
         # Unmatched code. error will be generated!
-        {:error, acc, bin, "Unknown expression in line! " <> Enum.count(acc)}
+        {:error, acc, bin, "Unknown expression in line! #{Enum.count(acc)}"}
     end
   end
 

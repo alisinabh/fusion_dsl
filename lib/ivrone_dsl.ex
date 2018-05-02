@@ -4,7 +4,8 @@ defmodule IvroneDsl do
   """
 
   def test_ast_begin do
-    {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(File.read!("test/samples/logical.ivr1"))
+    {:ok, conf, tokens} =
+      IvroneDsl.Processor.Lexer.tokenize(File.read!("test/samples/logical.ivr1"))
 
     lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
     {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)

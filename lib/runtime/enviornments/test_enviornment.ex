@@ -10,6 +10,7 @@ defmodule IvroneDsl.Runtime.Enviornments.TestEnviornment do
     {:ok, 0, env}
   end
 
+  @impl true
   def keycheck(prog, env, file_name, digit_count, timeout, acc_digits, timeout_v, wrongkey_v) do
     IO.puts(
       "keycheck(#{file_name}, #{digit_count}, #{timeout}, #{acc_digits}, #{timeout_v}, #{

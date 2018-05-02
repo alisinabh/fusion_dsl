@@ -2,7 +2,8 @@ defmodule IvroneDsl.Runtime.Enviornment do
   defstruct vars: %{},
             mod: IvroneDsl.Runtime.Enviornments.TestEnviornment,
             sys_vars: %{},
-            agi: nil
+            agi: nil,
+            last_user_action: DateTime.utc_now()
 
   alias IvroneDsl.Processor.Program
 
