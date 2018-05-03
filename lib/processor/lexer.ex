@@ -23,7 +23,10 @@ defmodule IvroneDsl.Processor.Lexer do
     "to_string",
     "int",
     "round",
-    "not"
+    "not",
+    "insert",
+    "elem",
+    "wait"
   ]
   @lang_ops [
     ",",
@@ -158,6 +161,16 @@ defmodule IvroneDsl.Processor.Lexer do
 
   # Handle Lang identifires
   Enum.each(@lang_ids, fn id ->
+    defp do_tokenize(<<unquote(id), "(", rest::binary>>, acc) do
+      cond do
+        Regex.match?(@r_fnclosoure, rest) ->
+          do_tokenize(rest, [unquote(id) | acc])
+
+        true ->
+          do_tokenize(inject_ending(rest), [unquote(id), "(", "(" | acc])
+      end
+    end
+
     defp do_tokenize(<<unquote(id), rest::binary>>, acc) do
       cond do
         Regex.match?(@r_fnclosoure, rest) ->

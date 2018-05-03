@@ -5,7 +5,17 @@ SOUNDS: ifilmmulti
 
 def main:
   play 'v' + 'salam', '012'
-  $a = [1, 2, 3]
+  $a1 = 1
+  if $a1 == 1
+    $b = 'correct'
+  else
+    $b = 'incorrect'
+  end
+  goto test
+  $end = 1
+  $a = [$a1, 2, 3, [1, 2]] + [4]
+  $arr_2 = elem $a, 2
+  $arr_3 = insert($a, 1, [0, 0])
   $alisina = 1 + 2 + 3
   $add = 1 + 2
   $sub = 1 - 2
@@ -17,8 +27,13 @@ def main:
   $json = %'{"salam": $new, "test": "data"}'
   $salam_val = $json.salam
   $json.khodafez.f.a = 'works!'
-  $half = $json.khodafez
-  $and = (1 == 1) and (2 != 2)
+  $half = $json.khodafez.f
+  $and = (1 == 1) || (2 != 2)
+
+def test:
+  $q = 1
+  return
+  $q = 2
   # hey
 #   if 1 == 2
 #     $salam = %'{"mobile": "$tel"}'

@@ -19,6 +19,10 @@ defmodule IvroneDsl.Runtime.Executor do
       {:ok, _, env} ->
         execute_procedure(prog, t, env)
 
+      {:jump, jump_amount, env} ->
+        t = jump(t, jump_amount)
+        execute_procedure(prog, t, env)
+
       {:end, env} ->
         {:end, env}
     end
@@ -26,6 +30,14 @@ defmodule IvroneDsl.Runtime.Executor do
 
   defp execute_procedure(prog, [], env) do
     {:end, env}
+  end
+
+  defp jump(t, 0) do
+    t
+  end
+
+  defp jump([_ | t], r_jmp) do
+    jump(t, r_jmp - 1)
   end
 
   defp execute_ast(prog, {:and, ctx, args}, env) do
@@ -73,6 +85,9 @@ defmodule IvroneDsl.Runtime.Executor do
 
       is_binary(left) or is_binary(right) ->
         {:ok, to_string(left) <> to_string(right), env}
+
+      is_list(left) and is_list(right) ->
+        {:ok, left ++ right, env}
 
       true ->
         error(prog, ctx, "Add(+) is not supported for #{inspect(left)} and #{inspect(right)}")
@@ -259,25 +274,6 @@ defmodule IvroneDsl.Runtime.Executor do
     {:ok, val, env}
   end
 
-  defp insert_map_var([final_var], val, var_val) do
-    Map.put(var_val, final_var, val)
-  end
-
-  defp insert_map_var([h | t], val, var_val) do
-    acc =
-      case Map.fetch(var_val, h) do
-        {:ok, acc} when is_map(acc) ->
-          acc
-
-        _ ->
-          %{}
-      end
-
-    final = insert_map_var(t, val, acc)
-
-    Map.put(var_val, h, final)
-  end
-
   defp execute_ast(prog, {:var, ctx, [var]}, env) do
     get_var(prog, var, env, ctx)
   end
@@ -338,6 +334,40 @@ defmodule IvroneDsl.Runtime.Executor do
     end
   end
 
+  defp execute_ast(prog, {:create_array, ctx, args}, env) do
+    {:ok, arr_elems, env} = process_args(prog, env, args, [])
+
+    {:ok, arr_elems, env}
+  end
+
+  defp execute_ast(prog, {:noop, ctx, _}, env) do
+    {:ok, nil, env}
+  end
+
+  defp execute_ast(prog, {:jump, ctx, [jump_amount]}, env) do
+    {:jump, jump_amount, env}
+  end
+
+  defp execute_ast(prog, {:jump_not, ctx, args}, env) do
+    {:ok, [condition, jump_amount], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_boolean(condition) ->
+        if not condition do
+          {:jump, jump_amount, env}
+        else
+          {:ok, nil, env}
+        end
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "Only boolean (true|false) is accepted in if condition. not #{inspect(condition)}"
+        )
+    end
+  end
+
   defp execute_ast(prog, {:goto, ctx, [proc]}, env) when is_atom(proc) do
     case prog.procedures[proc] do
       proc_asts when is_list(proc_asts) ->
@@ -349,6 +379,40 @@ defmodule IvroneDsl.Runtime.Executor do
       nil ->
         error(prog, ctx, "Procedure #{proc} not found!")
     end
+  end
+
+  defp execute_ast(prog, {:elem, ctx, [_, _] = args}, env) do
+    {:ok, [array, index], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_list(array) and is_integer(index) ->
+        {:ok, Enum.at(array, index), env}
+
+      true ->
+        error(prog, ctx, "elem is not supported for #{inspect(array)} at #{inspect(index)}")
+    end
+  end
+
+  defp execute_ast(prog, {:insert, ctx, [_, _, _] = args}, env) do
+    {:ok, [array, index, value], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_list(array) and is_integer(index) ->
+        {:ok, List.insert_at(array, index, value), env}
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "insert is not supported for #{inspect(array)} and #{inspect(value)} at #{
+            inspect(index)
+          }"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:return, _ctx, _}, env) do
+    {:end, env}
   end
 
   defp execute_ast(prog, {:json, ctx, [_] = args}, env) do
@@ -468,6 +532,25 @@ defmodule IvroneDsl.Runtime.Executor do
 
   defp do_get_var(prog, acc, [], env) do
     {:ok, acc, env}
+  end
+
+  defp insert_map_var([final_var], val, var_val) do
+    Map.put(var_val, final_var, val)
+  end
+
+  defp insert_map_var([h | t], val, var_val) do
+    acc =
+      case Map.fetch(var_val, h) do
+        {:ok, acc} when is_map(acc) ->
+          acc
+
+        _ ->
+          %{}
+      end
+
+    final = insert_map_var(t, val, acc)
+
+    Map.put(var_val, h, final)
   end
 
   defp error(prog, ctx, msg) do

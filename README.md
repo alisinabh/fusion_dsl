@@ -13,9 +13,9 @@ fast agi programs.
  - [x] define arrays
  - [x] Addition of numbers
  - [x] Additions of Strings
- - [ ] Addition of arrays
- - [ ] Appending to arrays
- - [ ] Insert between arrays
+ - [x] Addition of arrays
+ - [x] Insert between arrays
+ - [x] Get specific element of variable
  - [x] Subtract numbers
  - [x] Divide numbers
  - [x] Multiply numbers
@@ -32,23 +32,24 @@ fast agi programs.
  - [x] Getting map object value
  - [x] Setting map object value
  - [ ] Remove object from map
- - [ ] String contains
- - [ ] String index_of
- - [ ] String index_of_last
- - [ ] String length
- - [ ] String starts_with
- - [ ] String ends_with
- - [ ] Substring
+ - [ ] String/Array contains
+ - [ ] String/Array index_of
+ - [ ] String/Array index_of_last
+ - [ ] String/Array length
+ - [ ] String/Array starts_with
+ - [ ] String/Array ends_with
+ - [ ] Substring / Subarray
  - [ ] Regex match
  - [ ] Regex replace
  - [ ] Regex run
  - [x] Defining procedures
  - [x] Calling procedures
- - [ ] Procedure return
- - [ ] Condition (if, else)
+ - [x] Procedure return
+ - [x] Condition (if, else)
  - [ ] `for` loop
  - [ ] `while` loop
  - [x] parse number strings
  - [x] to_string numbers
  - [x] cast numbers to int
  - [x] round floats
+ - [ ] wait

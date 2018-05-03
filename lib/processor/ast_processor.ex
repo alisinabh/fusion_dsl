@@ -14,7 +14,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
   @default_state %{proc: nil, ln: 0, prog: %Program{}}
 
   @clause_beginners ["if"]
-  @noops ["end", "else", "noop"]
+  @noops ["end", "noop"]
   @operators [
     "*",
     "/",
@@ -67,7 +67,9 @@ defmodule IvroneDsl.Processor.AstProcessor do
     :to_string,
     :int,
     :round,
-    :not
+    :not,
+    :insert,
+    :elem
   ]
 
   @doc """
@@ -249,6 +251,20 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end
 
+  defp gen_ast(["else"], t_lines, state) do
+    case find_end_else(t_lines, 0, 0, false) do
+      {:ok, skip_amount} ->
+        {:ok, {:jump, [ln: state.ln], [skip_amount]}, state}
+
+      :not_found ->
+        raise("'end' for if not found!")
+    end
+  end
+
+  defp gen_ast(["return"], _, state) do
+    {:ok, {:return, [ln: state.ln], nil}, state}
+  end
+
   # Variables
   defp gen_ast([<<"$", var::binary>> | _t], _t_lines, state) do
     {:ok, {:var, [ln: state.ln], [var]}, state}
@@ -292,7 +308,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
       |> split_args([], [], 0)
       |> gen_args_ast(t_lines, state, [])
 
-    {:ok, asts, state}
+    {:ok, {:create_array, [ln: state.ln], asts}, state}
   end
 
   Enum.each(@operators, fn op ->
@@ -412,35 +428,36 @@ defmodule IvroneDsl.Processor.AstProcessor do
     Enum.reverse([Enum.reverse(f_acc) | acc])
   end
 
-  defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0)
+  # c_else = catch else: determines if else should be catched or not
+  defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0, c_else \\ true)
 
   Enum.each(@clause_beginners, fn cl ->
-    defp find_end_else([[_, "(", unquote(cl) | _] | t], inn, acc) do
-      find_end_else(t, inn + 1, acc + 1)
+    defp find_end_else([[_, "(", unquote(cl) | _] | t], inn, acc, c_else) do
+      find_end_else(t, inn + 1, acc + 1, c_else)
     end
   end)
 
-  defp find_end_else([[_, "(", "else", ")"] | _t], 0, acc) do
+  defp find_end_else([[_, "(", "else", ")"] | _t], 0, acc, true) do
     {:ok, acc + 1}
   end
 
-  defp find_end_else([[_, "(", "end", ")"] | _t], 0, acc) do
+  defp find_end_else([[_, "(", "end", ")"] | _t], 0, acc, _) do
     {:ok, acc + 1}
   end
 
-  defp find_end_else([[_, "(", "end", ")"] | t], inn, acc) when inn > 0 do
-    find_end_else(t, inn - 1, acc + 1)
+  defp find_end_else([[_, "(", "end", ")"] | t], inn, acc, c_else) when inn > 0 do
+    find_end_else(t, inn - 1, acc + 1, c_else)
   end
 
-  defp find_end_else([[_, "def", _]], _, _) do
+  defp find_end_else([[_, "def", _]], _, _, _) do
     :not_found
   end
 
-  defp find_end_else([_ | tail], inn, acc) do
-    find_end_else(tail, inn, acc + 1)
+  defp find_end_else([_ | tail], inn, acc, c_else) do
+    find_end_else(tail, inn, acc + 1, c_else)
   end
 
-  defp find_end_else([], _, _) do
+  defp find_end_else([], _, _, _) do
     :not_found
   end
 
