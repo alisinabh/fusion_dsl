@@ -15,6 +15,7 @@ fast agi programs.
  - [x] Additions of Strings
  - [x] Addition of arrays
  - [x] Insert between arrays
+ - [x] Remove from arrays
  - [x] Get specific element of variable
  - [x] Subtract numbers
  - [x] Divide numbers
@@ -28,10 +29,10 @@ fast agi programs.
  - [x] -= operator for numbers
  - [x] \*= for numbers
  - [x] /= for numbers
- - [ ] Destroy variables
+ - [x] Dispose variables
  - [x] Getting map object value
  - [x] Setting map object value
- - [ ] Remove object from map
+ - [x] Remove object from map
  - [ ] String/Array contains
  - [ ] String/Array index_of
  - [ ] String/Array index_of_last
@@ -52,4 +53,4 @@ fast agi programs.
  - [x] to_string numbers
  - [x] cast numbers to int
  - [x] round floats
- - [ ] wait
+ - [x] wait

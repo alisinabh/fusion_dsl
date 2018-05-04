@@ -26,7 +26,9 @@ defmodule IvroneDsl.Processor.Lexer do
     "not",
     "insert",
     "elem",
-    "wait"
+    "wait",
+    "remove",
+    "dispose"
   ]
   @lang_ops [
     ",",

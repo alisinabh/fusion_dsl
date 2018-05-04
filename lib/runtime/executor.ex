@@ -415,6 +415,57 @@ defmodule IvroneDsl.Runtime.Executor do
     {:end, env}
   end
 
+  defp execute_ast(prog, {:wait, ctx, [_] = args}, env) do
+    {:ok, [amount], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_number(amount) ->
+        (amount * 1000)
+        |> trunc
+        |> :timer.sleep()
+
+        {:ok, nil, env}
+
+      true ->
+        error(prog, ctx, "wait should be called with a valid number. not #{inspect(amount)}")
+    end
+  end
+
+  defp execute_ast(prog, {:remove, ctx, [_, _] = args}, env) do
+    {:ok, [value, index], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_list(value) and is_integer(index) ->
+        {:ok, List.delete_at(value, index), env}
+
+      is_binary(value) and is_integer(index) ->
+        {lead, <<_::utf8, tail::binary>>} = String.split_at(value, index)
+        {:ok, lead <> tail, env}
+
+      is_map(value) and is_binary(index) ->
+        {:ok, Map.delete(value, index), env}
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "remove is not supported with args: #{inspect(value)} and #{inspect(index)}"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:dispose, ctx, [{:var, _, [name]}] = args}, env) do
+    {:ok, [value], env} = process_args(prog, env, args, [])
+
+    cond do
+      String.contains?(name, ".") ->
+        error(prog, ctx, "Dispose only works on variables (not maps) $#{inspect(name)}")
+
+      true ->
+        {:ok, value, Map.put(env, :vars, Map.delete(env.vars, name))}
+    end
+  end
+
   defp execute_ast(prog, {:json, ctx, [_] = args}, env) do
     {:ok, [json], env} = process_args(prog, env, args, [])
 

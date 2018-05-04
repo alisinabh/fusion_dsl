@@ -55,8 +55,6 @@ defmodule IvroneDsl.Processor.AstProcessor do
   @short_setters ["+=", "-=", "*=", "/=", "%="]
 
   @functions [
-    :play,
-    :keycheck,
     :rand,
     :db_find,
     :db_insert,
@@ -69,7 +67,12 @@ defmodule IvroneDsl.Processor.AstProcessor do
     :round,
     :not,
     :insert,
-    :elem
+    :elem,
+    :wait,
+    :remove,
+    :dispose,
+    :play,
+    :keycheck
   ]
 
   @doc """

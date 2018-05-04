@@ -4,7 +4,7 @@ DB: IFilmGame
 SOUNDS: ifilmmulti
 
 def main:
-  play 'v' + 'salam', '012'
+  #play 'v' + 'salam', '012'
   $a1 = 1
   if $a1 == 1
     $b = 'correct'
@@ -29,6 +29,8 @@ def main:
   $json.khodafez.f.a = 'works!'
   $half = $json.khodafez.f
   $and = (1 == 1) || (2 != 2)
+  $remove = remove('salam', 3)
+  #$aprime = dispose($a)
 
 def test:
   $q = 1
