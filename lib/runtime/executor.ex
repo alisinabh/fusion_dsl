@@ -11,7 +11,8 @@ defmodule IvroneDsl.Runtime.Executor do
   Executes the program in given enviornment
   """
   def execute(%Program{} = prog, env) do
-    execute_procedure(prog, prog.procedures.main, env)
+    proc = List.first(env.cur_proc)
+    execute_procedure(prog, prog.procedures[proc], env)
   end
 
   defp execute_procedure(prog, [ast | t], env) do
@@ -23,7 +24,22 @@ defmodule IvroneDsl.Runtime.Executor do
         t = jump(t, jump_amount)
         execute_procedure(prog, t, env)
 
+      {:jump_to, {line_number, skip}, env} ->
+        proc = List.first(env.cur_proc)
+        t = jump_to(prog.procedures[proc], line_number)
+        t = jump(t, skip)
+        jump_c = env.jump_c + 1
+        env = Map.put(env, :jump_c, jump_c)
+
+        if rem(jump_c, 5) == 0 do
+          :timer.sleep(50)
+        end
+
+        execute_procedure(prog, t, env)
+
       {:end, env} ->
+        [_ | t] = env.cur_proc
+        env = Map.put(env, :cur_proc, t)
         {:end, env}
     end
   end
@@ -38,6 +54,16 @@ defmodule IvroneDsl.Runtime.Executor do
 
   defp jump([_ | t], r_jmp) do
     jump(t, r_jmp - 1)
+  end
+
+  defp jump_to([{_, ctx, _} = h | t] = p, ln) do
+    cond do
+      ctx[:ln] == ln ->
+        p
+
+      true ->
+        jump_to(t, ln)
+    end
   end
 
   defp execute_ast(prog, {:and, ctx, args}, env) do
@@ -348,6 +374,10 @@ defmodule IvroneDsl.Runtime.Executor do
     {:jump, jump_amount, env}
   end
 
+  defp execute_ast(prog, {:jump_to, ctx, [line_number, skip]}, env) do
+    {:jump_to, {line_number, skip}, env}
+  end
+
   defp execute_ast(prog, {:jump_not, ctx, args}, env) do
     {:ok, [condition, jump_amount], env} = process_args(prog, env, args, [])
 
@@ -363,7 +393,7 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "Only boolean (true|false) is accepted in if condition. not #{inspect(condition)}"
+          "Only boolean (true|false) is accepted in condition. not #{inspect(condition)}"
         )
     end
   end
@@ -371,8 +401,9 @@ defmodule IvroneDsl.Runtime.Executor do
   defp execute_ast(prog, {:goto, ctx, [proc]}, env) when is_atom(proc) do
     case prog.procedures[proc] do
       proc_asts when is_list(proc_asts) ->
-        :timer.sleep(100)
+        :timer.sleep(50)
         # Sleep is to prevent high cpu utilization in case of an infinity recursion
+        env = Map.put(env, :cur_proc, [proc | env.cur_proc])
         {:end, env} = execute_procedure(prog, proc_asts, env)
         {:ok, nil, env}
 

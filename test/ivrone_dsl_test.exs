@@ -16,7 +16,7 @@ defmodule IvroneDslTest do
     sounds: "testsounddir",
     start_code: 6
   }
-  @correct_logic_result "Start: add1 11,3,28,1.75,4,4,11,false,true,true,false,true,false,true,true, 1,-7,-12,-0.75,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false, end"
+  @correct_logic_result "Start: add1 11,3,28,1.75,3,4,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end"
 
   test "lexical analyser works on all types of tokens" do
     file_data = File.read!(@full_tokens_file)

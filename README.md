@@ -48,9 +48,12 @@ fast agi programs.
  - [x] Procedure return
  - [x] Condition (if, else)
  - [ ] `for` loop
- - [ ] `while` loop
+ - [x] `while` loop
+ - [ ] loop break
+ - [ ] loop continue
  - [x] parse number strings
  - [x] to_string numbers
  - [x] cast numbers to int
  - [x] round floats
  - [x] wait
+ - [ ] true/false keywords

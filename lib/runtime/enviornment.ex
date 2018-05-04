@@ -3,7 +3,9 @@ defmodule IvroneDsl.Runtime.Enviornment do
             mod: IvroneDsl.Runtime.Enviornments.TestEnviornment,
             sys_vars: %{},
             agi: nil,
-            last_user_action: DateTime.utc_now()
+            last_user_action: DateTime.utc_now(),
+            cur_proc: [:main],
+            jump_c: 0
 
   alias IvroneDsl.Processor.Program
 

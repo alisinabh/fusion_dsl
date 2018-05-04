@@ -42,9 +42,18 @@ def do_logics:
   $result += ($t > 5) + ','
   $result += ($t < 10) + ','
   $result += ($t <= 5) + ','
-  $result += ' '
+  if $t <= 5
+    $result += 'if'
+  else
+    $result += 'else'
+  end
+  $i = 0
+  while $i <= $t
+    $i += 1
+  end
+  $result += $i + ' '
   # TODO: arrays test
   # TODO: maps test
 
 # final resilt:
-# Start: add1 11,3,28,1.75,3,4,4,11,false,true,true,false,true,false,true,true, 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false, end
+# Start: add1 11,3,28,1.75,3,4,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end

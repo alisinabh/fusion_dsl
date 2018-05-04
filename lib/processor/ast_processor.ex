@@ -11,10 +11,10 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   alias IvroneDsl.Processor.Program
 
-  @default_state %{proc: nil, ln: 0, prog: %Program{}}
+  @default_state %{proc: nil, ln: 0, prog: %Program{}, end_asts: []}
 
-  @clause_beginners ["if"]
-  @noops ["end", "noop"]
+  @clause_beginners ["if", "for", "while"]
+  @noops ["noop"]
   @operators [
     "*",
     "/",
@@ -207,10 +207,6 @@ defmodule IvroneDsl.Processor.AstProcessor do
     insert_operator(t, operator, [h | acc], in_count)
   end
 
-  # defp insert_operator(["," | t], operator, acc, in_count) do
-  #   insert_operator(t, operator, ["," | acc], in_count)
-  # end
-
   defp insert_operator([left | t], operator, acc, 0) do
     insert_operator_skip(["(", "/" <> operator, left | acc], t)
   end
@@ -247,6 +243,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
     case find_end_else(t_lines) do
       {:ok, skip_amount} ->
         {:ok, if_cond_ast, state} = gen_ast(if_data, t_lines, state)
+        state = Map.put(state, :end_asts, [{:noop, nil} | state.end_asts])
         {:ok, {:jump_not, [ln: state.ln], [if_cond_ast, skip_amount]}, state}
 
       :not_found ->
@@ -260,7 +257,19 @@ defmodule IvroneDsl.Processor.AstProcessor do
         {:ok, {:jump, [ln: state.ln], [skip_amount]}, state}
 
       :not_found ->
-        raise("'end' for if not found!")
+        raise("'end' for else not found!")
+    end
+  end
+
+  defp gen_ast(["while" | while_data], t_lines, state) do
+    case find_end_else(t_lines, 0, 0, false) do
+      {:ok, skip_amount} ->
+        {:ok, while_cond_ast, state} = gen_ast(while_data, t_lines, state)
+        state = Map.put(state, :end_asts, [{:jump_to, [state.ln, 0]} | state.end_asts])
+        {:ok, {:jump_not, [ln: state.ln], [while_cond_ast, skip_amount]}, state}
+
+      :not_found ->
+        raise("'end' for while not found!")
     end
   end
 
@@ -363,12 +372,23 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end
 
-  # Operations that actualy does not do anything at runtime
+  # Operations that actualy does not do anything at runtime but ast position matters
   Enum.each(@noops, fn noop ->
     defp gen_ast([unquote(noop) | _], _t_lines, state) do
       {:ok, {:noop, [ln: state.ln], []}, state}
     end
   end)
+
+  defp gen_ast(["end"], _t_lines, state) do
+    case state.end_asts do
+      [] ->
+        {:ok, {:noop, [ln: state.ln], nil}, state}
+
+      [{fun, args} | t] ->
+        state = Map.put(state, :end_asts, t)
+        {:ok, {fun, [ln: state.ln], args}, state}
+    end
+  end
 
   defp gen_args_ast([arg | t], t_lines, state, asts) do
     {:ok, ast, state} = gen_ast(arg, t_lines, state)

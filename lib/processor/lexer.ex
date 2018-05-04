@@ -6,7 +6,6 @@ defmodule IvroneDsl.Processor.Lexer do
   @lang_ids [
     "if",
     "else",
-    "do",
     "end",
     "nil",
     "play",
@@ -28,7 +27,9 @@ defmodule IvroneDsl.Processor.Lexer do
     "elem",
     "wait",
     "remove",
-    "dispose"
+    "dispose",
+    "for",
+    "while"
   ]
   @lang_ops [
     ",",
