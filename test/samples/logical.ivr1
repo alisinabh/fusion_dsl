@@ -32,7 +32,7 @@ def do_logics:
   $a1 *= 2
   $a1 -= 4
   $a1 /= 3
-  $result += $a1 + ',' + (int $a) + ','
+  $result += $a1 + ',' + (round $a1) + ','
   $result += ($b1 + 6) + ','
   $result += ($t == 2) + ','
   $result += ($t == 5) + ','
@@ -43,9 +43,9 @@ def do_logics:
   $result += ($t < 10) + ','
   $result += ($t <= 5) + ','
   if $t <= 5
-    $result += 'if'
+    $result += 'if,'
   else
-    $result += 'else'
+    $result += 'else,'
   end
   $i = 0
   while $i <= $t
@@ -56,4 +56,4 @@ def do_logics:
   # TODO: maps test
 
 # final resilt:
-# Start: add1 11,3,28,1.75,3,4,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end
+# Start: add1 11,3,28,1.75,3,4.0,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end

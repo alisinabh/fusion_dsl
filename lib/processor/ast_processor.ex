@@ -11,7 +11,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   alias IvroneDsl.Processor.Program
 
-  @default_state %{proc: nil, ln: 0, prog: %Program{}, end_asts: []}
+  @default_state %{proc: nil, ln: 0, prog: %Program{}, end_asts: [], clauses: []}
 
   @clause_beginners ["if", "for", "while"]
   @noops ["noop"]
@@ -243,7 +243,12 @@ defmodule IvroneDsl.Processor.AstProcessor do
     case find_end_else(t_lines) do
       {:ok, skip_amount} ->
         {:ok, if_cond_ast, state} = gen_ast(if_data, t_lines, state)
-        state = Map.put(state, :end_asts, [{:noop, nil} | state.end_asts])
+
+        state =
+          state
+          |> Map.put(:end_asts, [{:noop, nil} | state.end_asts])
+          |> Map.put(:clauses, [{:if, [ln: state.ln]} | state.clauses])
+
         {:ok, {:jump_not, [ln: state.ln], [if_cond_ast, skip_amount]}, state}
 
       :not_found ->
@@ -261,16 +266,67 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end
 
-  defp gen_ast(["while" | while_data], t_lines, state) do
+  defp gen_ast(["(", "while" | while_data], t_lines, state) do
     case find_end_else(t_lines, 0, 0, false) do
       {:ok, skip_amount} ->
-        {:ok, while_cond_ast, state} = gen_ast(while_data, t_lines, state)
-        state = Map.put(state, :end_asts, [{:jump_to, [state.ln, 0]} | state.end_asts])
+        {:ok, [while_cond_ast | extra], state} =
+          while_data
+          |> get_scope_tokens([], 0)
+          |> split_args([], [], 0)
+          |> gen_args_ast(t_lines, state, [])
+
+        opt =
+          case extra do
+            ["unsafe" | _] -> false
+            _ -> true
+          end
+
+        state =
+          state
+          |> Map.put(:end_asts, [{:jump_to, [state.ln, 0, opt]} | state.end_asts])
+          |> Map.put(:clauses, [{:loop, [state.ln, 0, opt]} | state.clauses])
+
         {:ok, {:jump_not, [ln: state.ln], [while_cond_ast, skip_amount]}, state}
 
       :not_found ->
         raise("'end' for while not found!")
     end
+  end
+
+  defp gen_ast(["break"], t_lines, state) do
+    inn_init =
+      Enum.reduce(state.clauses, 0, fn x, acc ->
+        case x do
+          {:loop, _} ->
+            acc
+
+          _ ->
+            acc + 1
+        end
+      end)
+
+    case find_end_else(t_lines, inn_init, 0, false) do
+      {:ok, skip_amount} ->
+        {:ok, {:jump, [ln: state.ln], [skip_amount]}, state}
+
+      :not_found ->
+        raise("'end' for loop not found!")
+    end
+  end
+
+  defp gen_ast(["continue"], _, state) do
+    {:loop, jump_to_args} =
+      Enum.find(state.clauses, nil, fn x ->
+        case x do
+          {:loop, args} ->
+            true
+
+          _ ->
+            nil
+        end
+      end)
+
+    {:ok, {:jump_to, [ln: state.ln], jump_to_args}, state}
   end
 
   defp gen_ast(["return"], _, state) do
@@ -312,6 +368,11 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, num, state}
   end
 
+  # Numbers
+  defp gen_ast([bool | _t], _t_lines, state) when is_boolean(bool) do
+    {:ok, bool, state}
+  end
+
   # Arrays
   defp gen_ast(["(", "[" | arr_data], t_lines, state) do
     {:ok, asts, state} =
@@ -347,16 +408,6 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end)
 
-  defp gen_ast(["(", "!" | args], t_lines, state) do
-    {:ok, asts, state} =
-      args
-      |> get_scope_tokens([], 0)
-      |> split_args([], [], 0)
-      |> gen_args_ast(t_lines, state, [])
-
-    {:ok, {:not, [ln: state.ln], asts}, state}
-  end
-
   defp gen_ast(["(" | args], t_lines, state) do
     sp_args =
       args
@@ -380,12 +431,19 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end)
 
   defp gen_ast(["end"], _t_lines, state) do
+    [_ | tail_c] = state.clauses
+
     case state.end_asts do
       [] ->
+        state = Map.put(state, :clauses, tail_c)
         {:ok, {:noop, [ln: state.ln], nil}, state}
 
       [{fun, args} | t] ->
-        state = Map.put(state, :end_asts, t)
+        state =
+          state
+          |> Map.put(:end_asts, t)
+          |> Map.put(:clauses, tail_c)
+
         {:ok, {fun, [ln: state.ln], args}, state}
     end
   end

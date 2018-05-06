@@ -33,15 +33,16 @@ def main:
   # for $i = 1, $i < 2, $i += 1
   #
   # end
+  $a = 'sa\'\nlam\''
+  $t = false and true
   $end = 1
   $while = 0
-  while $end < 5
-    $end2 = 9
-    while $end2 > 5
-      $while += 1
-      $end2 -= 1
-    end
+  while true, 'unsafe'
     $end += 1
+    if $end <= 10
+      continue
+    end
+    break
   end
 
   #$aprime = dispose($a)

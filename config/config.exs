@@ -2,7 +2,12 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-config :ivrone_dsl, base_sound_path: "/var/lib/asterisk/sounds/fa/"
+config :ivrone_dsl,
+  base_sound_path: "/var/lib/asterisk/sounds/fa/",
+  jump_start_throttle: 200,
+  jump_throttle_every: 20,
+  jump_throttle_time_ms: 50
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

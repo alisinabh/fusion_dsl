@@ -1,0 +1,56 @@
+FORMAT: IVRONE1
+NAME: TestApp
+DB: TestDb
+SOUNDS: testsounddir
+
+def main:
+  # Test condition
+  $result = ''
+  if true
+    $result += 'start '
+  end
+  if 1 == 1 and 2.5 == 2.50
+    $result += '1,'
+  end
+  if not 1 == 2
+    $result += '1,'
+  end
+
+  # Test normal loop
+  $wl = 0
+  while $wl < 10
+    $wl += 1
+  end
+  if $wl != 10
+    $result += '0,'
+  else
+    $result += '1,'
+  end
+
+  # Test complex loop
+  $wl = 0
+  while true
+    $wl += 1
+    if $wl < 10
+      continue
+    end
+    break
+  end
+
+  if $wl == 10
+    $result += '1,'
+  end
+
+  if to_number('10') == 10
+    $result += '1,'
+  end
+
+  if int(10.2) == 10
+    $result += '1,'
+  end
+
+  if to_number('10.2') == 10.2
+    $result += '1,'
+  end
+
+  $result += 'end'

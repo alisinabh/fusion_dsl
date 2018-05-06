@@ -7,6 +7,10 @@ defmodule IvroneDsl.Runtime.Executor do
 
   @r_json_vars ~r/\$([A-Za-z]{1}[A-Za-z0-9.\_]*)/
 
+  @jump_start_throttle Application.get_env(:ivrone_dsl, :jump_start_throttle)
+  @jump_throttle_every Application.get_env(:ivrone_dsl, :jump_throttle_every)
+  @jump_throttle_time_ms Application.get_env(:ivrone_dsl, :jump_throttle_time_ms)
+
   @doc """
   Executes the program in given enviornment
   """
@@ -24,15 +28,15 @@ defmodule IvroneDsl.Runtime.Executor do
         t = jump(t, jump_amount)
         execute_procedure(prog, t, env)
 
-      {:jump_to, {line_number, skip}, env} ->
+      {:jump_to, {line_number, skip, opt}, env} ->
         proc = List.first(env.cur_proc)
         t = jump_to(prog.procedures[proc], line_number)
         t = jump(t, skip)
         jump_c = env.jump_c + 1
         env = Map.put(env, :jump_c, jump_c)
 
-        if rem(jump_c, 5) == 0 do
-          :timer.sleep(50)
+        if opt and jump_c > @jump_start_throttle and rem(jump_c, @jump_throttle_every) == 0 do
+          :timer.sleep(@jump_throttle_time_ms)
         end
 
         execute_procedure(prog, t, env)
@@ -48,9 +52,7 @@ defmodule IvroneDsl.Runtime.Executor do
     {:end, env}
   end
 
-  defp jump(t, 0) do
-    t
-  end
+  defp jump(t, 0), do: t
 
   defp jump([_ | t], r_jmp) do
     jump(t, r_jmp - 1)
@@ -360,6 +362,22 @@ defmodule IvroneDsl.Runtime.Executor do
     end
   end
 
+  defp execute_ast(prog, {:round, ctx, [_] = args}, env) do
+    {:ok, [num], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(num) ->
+        {val, _} = Float.parse(num)
+        {:ok, round(val), env}
+
+      is_number(num) ->
+        {:ok, round(num), env}
+
+      true ->
+        error(prog, ctx, "Cannot convert #{num} to int")
+    end
+  end
+
   defp execute_ast(prog, {:create_array, ctx, args}, env) do
     {:ok, arr_elems, env} = process_args(prog, env, args, [])
 
@@ -374,8 +392,8 @@ defmodule IvroneDsl.Runtime.Executor do
     {:jump, jump_amount, env}
   end
 
-  defp execute_ast(prog, {:jump_to, ctx, [line_number, skip]}, env) do
-    {:jump_to, {line_number, skip}, env}
+  defp execute_ast(prog, {:jump_to, ctx, [line_number, skip, opt]}, env) do
+    {:jump_to, {line_number, skip, opt}, env}
   end
 
   defp execute_ast(prog, {:jump_not, ctx, args}, env) do

@@ -29,7 +29,9 @@ defmodule IvroneDsl.Processor.Lexer do
     "remove",
     "dispose",
     "for",
-    "while"
+    "while",
+    "break",
+    "continue"
   ]
   @lang_ops [
     ",",
@@ -224,6 +226,19 @@ defmodule IvroneDsl.Processor.Lexer do
     end
   end)
 
+  defp do_tokenize(<<"true", rest::binary>>, acc) do
+    do_tokenize(rest, [true | acc])
+  end
+
+  defp do_tokenize(<<"false", rest::binary>>, acc) do
+    do_tokenize(rest, [false | acc])
+  end
+
+  # handle empty strings
+  defp do_tokenize(<<"''", rest::binary>>, acc) do
+    do_tokenize(rest, ["''" | acc])
+  end
+
   # handle strings
   defp do_tokenize(<<"'", rest::binary>>, acc) do
     do_tokenize_string(rest, acc, "'")
@@ -276,6 +291,8 @@ defmodule IvroneDsl.Processor.Lexer do
 
       true ->
         # Unmatched code. error will be generated!
+        require IEx
+        IEx.pry()
         {:error, acc, bin, "Unknown expression in line! #{Enum.count(acc)}"}
     end
   end
@@ -289,9 +306,11 @@ defmodule IvroneDsl.Processor.Lexer do
         if String.contains?(string, "\n") do
           {:error, acc, rest, "expected ' for end of string!"}
         else
+          {cmp_string, _} = Code.eval_string("\"" <> String.replace(string, "\"", "\\\"") <> "\"")
+
           rest
           |> String.slice(loc..-1)
-          |> do_tokenize([string | acc])
+          |> do_tokenize([cmp_string | acc])
         end
 
       _ ->
