@@ -4,47 +4,48 @@ defmodule IvroneDsl.Processor.Lexer do
   """
 
   @lang_ids [
-    "if",
-    "else",
-    "ends_with",
-    "end",
-    "play",
-    "keycheck",
-    "return",
-    "rand",
+    "last_index_of",
+    "regex_replace",
+    "starts_with",
     "json_encode",
     "json_decode",
-    "db_find",
-    "db_remove",
+    "regex_match",
+    "regex_scan",
     "db_insert",
     "db_update",
     "to_number",
     "to_string",
-    "int",
-    "round",
-    "not",
-    "insert",
-    "elem",
-    "wait",
-    "remove",
-    "dispose",
-    "for",
-    "while",
-    "break",
+    "regex_run",
+    "ends_with",
+    "db_remove",
+    "ends_with",
+    "keycheck",
     "continue",
     "contains",
     "index_of",
-    "last_index_of",
-    "length",
-    "starts_with",
-    "ends_with",
-    "slice",
+    "dispose",
     "replace",
+    "db_find",
     "reverse",
-    "regex_match",
-    "regex_replace",
-    "regex_run",
-    "regex_scan"
+    "remove",
+    "insert",
+    "return",
+    "length",
+    "break",
+    "while",
+    "slice",
+    "round",
+    "regex",
+    "wait",
+    "play",
+    "rand",
+    "elem",
+    "else",
+    "for",
+    "not",
+    "int",
+    "end",
+    "if"
   ]
   @lang_ops [
     ",",
@@ -383,4 +384,9 @@ defmodule IvroneDsl.Processor.Lexer do
   defp inject_ending(string) do
     Regex.replace(@r_eol, string, ")\n", global: false)
   end
+
+  @doc false
+  def get_lang_ids, do: @lang_ids
+  @doc false
+  def get_lang_ops, do: @lang_ops
 end

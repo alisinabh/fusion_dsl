@@ -24,6 +24,20 @@ defmodule IvroneDslTest do
   @correct_strings_trues 14
   @correct_arrays_trues 15
 
+  test "lexer lang-id order is correct" do
+    [id | t] = IvroneDsl.Processor.Lexer.get_lang_ids()
+    assert ensure_desc(t, String.length(id)) == :ok
+  end
+
+  defp ensure_desc([h | t], cur_len) do
+    assert String.length(h) <= cur_len
+    ensure_desc(t, String.length(h))
+  end
+
+  defp ensure_desc([], _) do
+    :ok
+  end
+
   test "lexical analyser works on all types of tokens" do
     file_data = File.read!(@full_tokens_file)
     assert {:ok, _conf, _tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)

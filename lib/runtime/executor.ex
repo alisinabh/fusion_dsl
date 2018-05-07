@@ -803,6 +803,73 @@ defmodule IvroneDsl.Runtime.Executor do
     end
   end
 
+  defp execute_ast(prog, {:regex, ctx, args}, env) do
+    {:ok, [regex_str | opts] = f_args, env} = process_args(prog, env, args, [])
+
+    opt =
+      case opts do
+        [] -> ""
+        [str] -> str
+      end
+
+    cond do
+      is_binary(regex_str) and is_binary(opt) ->
+        {:ok, Regex.compile!(regex_str, opt), env}
+
+      true ->
+        error(prog, ctx, "Invalid arguments for regex compile: #{inspect(f_args)}")
+    end
+  end
+
+  defp execute_ast(prog, {:regex_run, ctx, args}, env) do
+    {:ok, [%Regex{} = regex, string] = f_args, env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(string) ->
+        {:ok, Regex.run(regex, string, return: :index), env}
+
+      true ->
+        error(prog, ctx, "Invalid arguments for regex run: #{inspect(f_args)}")
+    end
+  end
+
+  defp execute_ast(prog, {:regex_match, ctx, args}, env) do
+    {:ok, [%Regex{} = regex, string] = f_args, env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(string) ->
+        {:ok, Regex.match?(regex, string), env}
+
+      true ->
+        error(prog, ctx, "Invalid arguments for regex match: #{inspect(f_args)}")
+    end
+  end
+
+  defp execute_ast(prog, {:regex_replace, ctx, args}, env) do
+    {:ok, [%Regex{} = regex, string, replacement] = f_args, env} =
+      process_args(prog, env, args, [])
+
+    cond do
+      is_binary(string) ->
+        {:ok, Regex.replace(regex, string, replacement), env}
+
+      true ->
+        error(prog, ctx, "Invalid arguments for regex replace: #{inspect(f_args)}")
+    end
+  end
+
+  defp execute_ast(prog, {:regex_scan, ctx, args}, env) do
+    {:ok, [%Regex{} = regex, string] = f_args, env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(string) ->
+        {:ok, Regex.scan(regex, string, return: :index), env}
+
+      true ->
+        error(prog, ctx, "Invalid arguments for regex replace: #{inspect(f_args)}")
+    end
+  end
+
   defp execute_ast(prog, {:play, ctx, args}, env) do
     {:ok, [file_name | t], env} = process_args(prog, env, args, [])
 
@@ -844,6 +911,10 @@ defmodule IvroneDsl.Runtime.Executor do
 
   defp execute_ast(prog, v, env) when is_nil(v) do
     {:ok, nil, env}
+  end
+
+  defp execute_ast(prog, %Regex{} = v, env) do
+    {:ok, v, env}
   end
 
   defp execute_ast(prog, {_, ctx, _} = unknown, env) do

@@ -82,6 +82,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
     :slice,
     :replace,
     :reverse,
+    :regex,
     :regex_match,
     :regex_replace,
     :regex_run,
