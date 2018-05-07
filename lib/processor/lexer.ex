@@ -6,8 +6,8 @@ defmodule IvroneDsl.Processor.Lexer do
   @lang_ids [
     "if",
     "else",
+    "ends_with",
     "end",
-    "nil",
     "play",
     "keycheck",
     "return",
@@ -31,7 +31,20 @@ defmodule IvroneDsl.Processor.Lexer do
     "for",
     "while",
     "break",
-    "continue"
+    "continue",
+    "contains",
+    "index_of",
+    "last_index_of",
+    "length",
+    "starts_with",
+    "ends_with",
+    "slice",
+    "replace",
+    "reverse",
+    "regex_match",
+    "regex_replace",
+    "regex_run",
+    "regex_scan"
   ]
   @lang_ops [
     ",",
@@ -130,7 +143,10 @@ defmodule IvroneDsl.Processor.Lexer do
   defp normalize(code) do
     code = String.replace(code, "\r\n", "\n")
 
+    #
     if String.ends_with?(code, "\n") do
+      # {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
+      # IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
       code
     else
       code <> "\n"
@@ -172,7 +188,7 @@ defmodule IvroneDsl.Processor.Lexer do
           do_tokenize(rest, [unquote(id) | acc])
 
         true ->
-          do_tokenize(inject_ending(rest), [unquote(id), "(", "(" | acc])
+          do_tokenize(rest, [unquote(id), "(" | acc])
       end
     end
 
@@ -264,6 +280,10 @@ defmodule IvroneDsl.Processor.Lexer do
     skip_line(rest, acc)
   end
 
+  defp do_tokenize(<<"nil", rest::binary>>, acc) do
+    do_tokenize(rest, ["nil" | acc])
+  end
+
   # Unmatched binary
   defp do_tokenize(bin, acc) do
     cond do
@@ -291,8 +311,6 @@ defmodule IvroneDsl.Processor.Lexer do
 
       true ->
         # Unmatched code. error will be generated!
-        require IEx
-        IEx.pry()
         {:error, acc, bin, "Unknown expression in line! #{Enum.count(acc)}"}
     end
   end

@@ -49,6 +49,8 @@ defmodule IvroneDsl.Runtime.Executor do
   end
 
   defp execute_procedure(prog, [], env) do
+    [_ | t] = env.cur_proc
+    env = Map.put(env, :cur_proc, t)
     {:end, env}
   end
 
@@ -174,14 +176,17 @@ defmodule IvroneDsl.Runtime.Executor do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
-      is_number(left) and is_number(right) ->
-        {:ok, left == right, env}
+      is_tuple(left) or is_tuple(right) ->
+        error(prog, ctx, "Equals(==) is not supported for #{inspect(left)} and #{inspect(right)}")
 
-      is_binary(left) and is_binary(right) ->
-        {:ok, left == right, env}
+      is_nil(left) ->
+        {:ok, is_nil(right), env}
+
+      is_nil(right) ->
+        {:ok, is_nil(left), env}
 
       true ->
-        error(prog, ctx, "Equals(==) is not supported for #{inspect(left)} and #{inspect(right)}")
+        {:ok, left == right, env}
     end
   end
 
@@ -508,7 +513,7 @@ defmodule IvroneDsl.Runtime.Executor do
 
     cond do
       String.contains?(name, ".") ->
-        error(prog, ctx, "Dispose only works on variables (not maps) $#{inspect(name)}")
+        error(prog, ctx, "Dispose only works on variables (not map elements) $#{inspect(name)}")
 
       true ->
         {:ok, value, Map.put(env, :vars, Map.delete(env.vars, name))}
@@ -545,6 +550,256 @@ defmodule IvroneDsl.Runtime.Executor do
 
       _ ->
         error(prog, ctx, "Json decode error: #{inspect(json)}")
+    end
+  end
+
+  defp execute_ast(prog, {:contains, ctx, [_, _] = args}, env) do
+    {:ok, [source, element], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(source) and is_binary(element) ->
+        {:ok, String.contains?(source, element), env}
+
+      is_list(source) ->
+        {:ok, Enum.member?(source, element), env}
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "contains works on arrays and strings only. called with: #{inspect(source)} and #{
+            inspect(element)
+          }"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:index_of, ctx, [_, _] = args}, env) do
+    {:ok, [source, element], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(source) and is_binary(element) ->
+        len =
+          case String.split(source, element) do
+            [h, _ | _] ->
+              String.length(h)
+
+            _ ->
+              nil
+          end
+
+        {:ok, len, env}
+
+      is_list(source) ->
+        {:ok, Enum.find_index(source, &(&1 == element)), env}
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "index_of works on arrays and strings only. called with: #{inspect(source)} and #{
+            inspect(element)
+          }"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:last_index_of, ctx, [_, _] = args}, env) do
+    {:ok, [source, element], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(source) and is_binary(element) ->
+        source = String.reverse(source)
+
+        len =
+          case String.split(source, element) do
+            [h, _ | _] ->
+              String.length(source) - String.length(h) - 1
+
+            _ ->
+              nil
+          end
+
+        {:ok, len, env}
+
+      is_list(source) ->
+        source = Enum.reverse(source)
+
+        case Enum.find_index(source, &(&1 == element)) do
+          nil ->
+            {:ok, nil, env}
+
+          count when is_integer(count) ->
+            {:ok, Enum.count(source) - count - 1, env}
+        end
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "last_index_of works on arrays and strings only. called with: #{inspect(source)} and #{
+            inspect(element)
+          }"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:starts_with, ctx, [_, _] = args}, env) do
+    {:ok, [source, element], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(source) and is_binary(element) ->
+        {:ok, String.starts_with?(source, element), env}
+
+      is_list(source) ->
+        case source do
+          [^element | _] ->
+            {:ok, true, env}
+
+          _ ->
+            {:ok, false, env}
+        end
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "starts_with works on arrays and strings only. called with: #{inspect(source)} and #{
+            inspect(element)
+          }"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:ends_with, ctx, [_, _] = args}, env) do
+    {:ok, [source, element], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(source) and is_binary(element) ->
+        {:ok, String.ends_with?(source, element), env}
+
+      is_list(source) ->
+        last = List.last(source)
+
+        cond do
+          is_nil(last) ->
+            {:ok, false, env}
+
+          last == element ->
+            {:ok, true, env}
+
+          true ->
+            {:ok, false, env}
+        end
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "ends_with works on arrays and strings only. called with: #{inspect(source)} and #{
+            inspect(element)
+          }"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:replace, ctx, [_, _, _] = args}, env) do
+    {:ok, [source, element, replace], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(source) and is_binary(element) ->
+        {:ok, String.replace(source, element, replace), env}
+
+      is_list(source) ->
+        result =
+          source
+          |> Enum.reduce([], fn x, acc ->
+            if element == x do
+              [replace | acc]
+            else
+              [x | acc]
+            end
+          end)
+          |> Enum.reverse()
+
+        {:ok, result, env}
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "replace works on arrays and strings only. called with: #{inspect(source)} and #{
+            inspect(element)
+          } and #{inspect(replace)}"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:reverse, ctx, [_] = args}, env) do
+    {:ok, [source], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(source) ->
+        {:ok, String.reverse(source), env}
+
+      is_list(source) ->
+        {:ok, Enum.reverse(source), env}
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "reverse works on arrays and strings only. called with: #{inspect(source)}"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:length, ctx, [_] = args}, env) do
+    {:ok, [source], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(source) ->
+        {:ok, String.length(source), env}
+
+      is_list(source) ->
+        {:ok, Enum.count(source), env}
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "length works on arrays and strings only. called with: #{inspect(source)}"
+        )
+    end
+  end
+
+  defp execute_ast(prog, {:slice, ctx, [_, _ | _] = args}, env) do
+    {:ok, [source, start | count] = f_args, env} = process_args(prog, env, args, [])
+
+    count =
+      case count do
+        [] ->
+          -1
+
+        [num | _] when is_integer(num) ->
+          num
+      end
+
+    cond do
+      is_binary(source) and count == -1 ->
+        {:ok, String.slice(source, start..-1), env}
+
+      is_binary(source) ->
+        {:ok, String.slice(source, start, count), env}
+
+      is_list(source) and count == -1 ->
+        {:ok, Enum.slice(source, start..-1), env}
+
+      is_list(source) ->
+        {:ok, Enum.slice(source, start, count), env}
+
+      true ->
+        error(prog, ctx, "Bad arguments for slice #{inspect(f_args)}")
     end
   end
 
@@ -585,6 +840,10 @@ defmodule IvroneDsl.Runtime.Executor do
 
   defp execute_ast(prog, map, env) when is_map(map) do
     {:ok, map, env}
+  end
+
+  defp execute_ast(prog, v, env) when is_nil(v) do
+    {:ok, nil, env}
   end
 
   defp execute_ast(prog, {_, ctx, _} = unknown, env) do

@@ -72,7 +72,20 @@ defmodule IvroneDsl.Processor.AstProcessor do
     :remove,
     :dispose,
     :play,
-    :keycheck
+    :keycheck,
+    :contains,
+    :index_of,
+    :last_index_of,
+    :length,
+    :starts_with,
+    :ends_with,
+    :slice,
+    :replace,
+    :reverse,
+    :regex_match,
+    :regex_replace,
+    :regex_run,
+    :regex_scan
   ]
 
   @doc """

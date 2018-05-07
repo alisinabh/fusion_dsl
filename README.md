@@ -33,16 +33,19 @@ fast agi programs.
  - [x] Getting map object value
  - [x] Setting map object value
  - [x] Remove object from map
- - [ ] String/Array contains
- - [ ] String/Array index_of
- - [ ] String/Array index_of_last
- - [ ] String/Array length
- - [ ] String/Array starts_with
- - [ ] String/Array ends_with
- - [ ] Substring / Subarray
+ - [x] String/Array contains
+ - [x] String/Array index_of
+ - [x] String/Array index_of_last
+ - [x] String/Array length
+ - [x] String/Array starts_with
+ - [x] String/Array ends_with
+ - [x] String/Array replace
+ - [x] String/Array reverse
+ - [x] Substring / Subarray
  - [ ] Regex match
  - [ ] Regex replace
  - [ ] Regex run
+ - [ ] Regex scan
  - [x] Defining procedures
  - [x] Calling procedures
  - [x] Procedure return

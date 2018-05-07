@@ -3,7 +3,7 @@ defmodule IvroneDsl do
   Documentation for IvroneDsl.
   """
 
-  def test_ast_begin(filename \\ "test/samples/logical.ivr1") do
+  def test_ast_begin(filename \\ "test/samples/arrays.ivr1") do
     {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(File.read!(filename))
 
     lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)

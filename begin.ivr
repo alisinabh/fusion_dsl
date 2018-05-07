@@ -33,17 +33,20 @@ def main:
   # for $i = 1, $i < 2, $i += 1
   #
   # end
-  $a = 'sa\'\nlam\''
-  $t = false and true
-  $end = 1
-  $while = 0
-  while true, 'unsafe'
-    $end += 1
-    if $end <= 10
-      continue
-    end
-    break
-  end
+  $test_str = 'salam alisina'
+  $test_arr = [3, 1, 2, 3, 4]
+  $res = slice($test_str,1, 2)
+  # $a = 'sa\'\nlam\''
+  # $t = false and true
+  # $end = 1
+  # $while = 0
+  # while true, 'unsafe'
+  #   $end += 1
+  #   if $end <= 10
+  #     continue
+  #   end
+  #   break
+  # end
 
   #$aprime = dispose($a)
 #

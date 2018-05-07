@@ -6,6 +6,8 @@ defmodule IvroneDslTest do
   @scopes_file "test/samples/scopes.ivr1"
   @logical_file "test/samples/logical.ivr1"
   @coditional_file "test/samples/conditional.ivr1"
+  @strings_file "test/samples/strings.ivr1"
+  @arrays_file "test/samples/arrays.ivr1"
 
   @full_tokens_first_ln 6
   @full_tokens_last_ln 37
@@ -19,6 +21,8 @@ defmodule IvroneDslTest do
   }
   @correct_logic_result "Start: add1 11,3,28,1.75,3,4.0,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end"
   @correct_conditinal_result "start 1,1,1,1,1,1,1,end"
+  @correct_strings_trues 14
+  @correct_arrays_trues 15
 
   test "lexical analyser works on all types of tokens" do
     file_data = File.read!(@full_tokens_file)
@@ -75,5 +79,41 @@ defmodule IvroneDslTest do
     {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
     {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
     assert env.vars["result"] == @correct_conditinal_result
+  end
+
+  test "String operations work as expected" do
+    file_data = File.read!(@strings_file)
+    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+
+    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
+    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    result = env.vars["result"]
+
+    correct =
+      Enum.reduce(1..@correct_strings_trues, "", fn _x, acc ->
+        "true," <> acc
+      end)
+
+    assert result == correct
+  end
+
+  test "Array operations work as expected" do
+    file_data = File.read!(@arrays_file)
+    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+
+    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
+    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    result = env.vars["result"]
+
+    correct =
+      Enum.reduce(1..@correct_arrays_trues, "", fn _x, acc ->
+        "true," <> acc
+      end)
+
+    assert result == correct
   end
 end

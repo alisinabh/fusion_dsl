@@ -1,0 +1,37 @@
+FORMAT: IVRONE1
+NAME: TestApp
+DB: TestDb
+SOUNDS: testsounddir
+
+def main:
+  $result = ''
+  $_test = [1, 2, 3, 4, 3]
+  $world = replace($_test, 3, 2)
+  $world_2 = slice($_test, 2)
+  $w = slice($_test, 3, 1)
+  $w2 = elem($_test, 3)
+
+  $result += ($world == [1, 2, 2, 4, 2]) + ','
+  $result += ($world_2 == [3, 4, 3]) + ','
+
+  $result += ($w == [4]) + ','
+  $result += ($w2 == 4) + ','
+
+  $result += (length($_test) == 5) + ','
+
+  $result += (index_of($_test, 3) == 2) + ','
+  $result += (index_of($_test, 5) == nil) + ','
+
+  $result += (last_index_of($_test, 3) == 4) + ','
+  $result += (last_index_of($_test, 'k') == nil) + ','
+
+  $result += (contains($_test, 1)) + ','
+  $result += (contains($_test, 6) == false) + ','
+
+  $result += (starts_with($_test, 1)) + ','
+  $result += (starts_with($_test, 2) == false) + ','
+
+  $result += (ends_with($_test, 3)) + ','
+  $result += (ends_with($_test, 4) == false) + ','
+
+# Correct: 15 true in a string seprated with `,`
