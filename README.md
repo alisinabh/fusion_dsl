@@ -42,10 +42,10 @@ fast agi programs.
  - [x] String/Array replace
  - [x] String/Array reverse
  - [x] Substring / Subarray
- - [ ] Regex match
- - [ ] Regex replace
- - [ ] Regex run
- - [ ] Regex scan
+ - [x] Regex match
+ - [x] Regex replace
+ - [x] Regex run
+ - [x] Regex scan
  - [x] Defining procedures
  - [x] Calling procedures
  - [x] Procedure return
