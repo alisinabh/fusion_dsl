@@ -1,0 +1,19 @@
+FORMAT: IVRONE1
+NAME: TestApp
+DB: TestDb
+SOUNDS: testsounddir
+
+def main:
+  $reg1 = regex('\h([A-Za-z]+)')
+  $_test = 'helLo there i2cc'
+
+  $run = regex_run($reg1, $_test)
+  $match = regex_match($reg1, $_test)
+  $scan = regex_scan($reg1, $_test)
+  $replace = regex_replace($reg1, $_test, '1')
+
+  $result = ''
+  $result += ($run == [[0, 5], [1, 4]]) + ','
+  $result += $match + ','
+  $result += ($scan == [[[0, 5], [1, 4]], [[7, 4], [8, 3]]]) + ','
+  $result += ($replace == '1 t1 i2cc') + ','

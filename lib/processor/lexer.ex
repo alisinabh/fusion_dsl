@@ -4,33 +4,76 @@ defmodule IvroneDsl.Processor.Lexer do
   """
 
   @lang_ids [
-    "if",
-    "else",
-    "do",
-    "end",
-    "nil",
-    "play",
+    "last_index_of",
+    "regex_replace",
+    "starts_with",
+    "json_encode",
+    "json_decode",
+    "regex_match",
+    "regex_scan",
+    "db_insert",
+    "db_update",
+    "to_number",
+    "to_string",
+    "regex_run",
+    "ends_with",
+    "db_remove",
+    "ends_with",
     "keycheck",
+    "continue",
+    "contains",
+    "index_of",
+    "dispose",
+    "replace",
+    "db_find",
+    "reverse",
+    "remove",
+    "insert",
     "return",
+    "length",
+    "break",
+    "while",
+    "slice",
+    "round",
+    "regex",
+    "wait",
+    "play",
     "rand",
-    "!"
+    "elem",
+    "else",
+    "for",
+    "not",
+    "int",
+    "end",
+    "if"
   ]
   @lang_ops [
     ",",
+    "+=",
+    "-=",
+    "*=",
+    "/=",
+    "%=",
     "+",
     "-",
+    "*",
     "/",
     "%",
-    "*",
     "==",
     "!=",
     "=",
-    ">",
-    "<",
     ">=",
     "<=",
+    ">",
+    "<",
     "(",
-    ")"
+    ")",
+    "[",
+    "]",
+    "and",
+    "or",
+    "&&",
+    "||"
   ]
   @lang_var ["$", "@", "."]
 
@@ -38,7 +81,7 @@ defmodule IvroneDsl.Processor.Lexer do
   @r_lable ~r/\Adef[ \t]+([A-Za-z0-9\-_]+)\:[ \t]*\n/
   @r_number ~r/\A[0-9]+[\.]?[0-9]*/
   @r_string ~r/[^\\](\')/
-  @r_var ~r/\A[A-Za-z]+[A-Za-z0-9\_]+[.]?[A-Za-z0-9\_]*/
+  @r_var ~r/\A[\_]?[A-Za-z]+[A-Za-z0-9.\_]*/
   @r_goto ~r/\Agoto[ \t]+([A-Za-z0-9\-_]+)/
   @r_fnclosoure ~r/\A[ \t]+\(/
   @r_eol ~r/\n/
@@ -101,7 +144,10 @@ defmodule IvroneDsl.Processor.Lexer do
   defp normalize(code) do
     code = String.replace(code, "\r\n", "\n")
 
+    #
     if String.ends_with?(code, "\n") do
+      # {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
+      # IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
       code
     else
       code <> "\n"
@@ -137,6 +183,16 @@ defmodule IvroneDsl.Processor.Lexer do
 
   # Handle Lang identifires
   Enum.each(@lang_ids, fn id ->
+    defp do_tokenize(<<unquote(id), "(", rest::binary>>, acc) do
+      cond do
+        Regex.match?(@r_fnclosoure, rest) ->
+          do_tokenize(rest, [unquote(id) | acc])
+
+        true ->
+          do_tokenize(rest, [unquote(id), "(" | acc])
+      end
+    end
+
     defp do_tokenize(<<unquote(id), rest::binary>>, acc) do
       cond do
         Regex.match?(@r_fnclosoure, rest) ->
@@ -187,6 +243,19 @@ defmodule IvroneDsl.Processor.Lexer do
     end
   end)
 
+  defp do_tokenize(<<"true", rest::binary>>, acc) do
+    do_tokenize(rest, [true | acc])
+  end
+
+  defp do_tokenize(<<"false", rest::binary>>, acc) do
+    do_tokenize(rest, [false | acc])
+  end
+
+  # handle empty strings
+  defp do_tokenize(<<"''", rest::binary>>, acc) do
+    do_tokenize(rest, ["''" | acc])
+  end
+
   # handle strings
   defp do_tokenize(<<"'", rest::binary>>, acc) do
     do_tokenize_string(rest, acc, "'")
@@ -210,6 +279,10 @@ defmodule IvroneDsl.Processor.Lexer do
   # Ignores comment
   defp do_tokenize(<<"#", rest::binary>>, acc) do
     skip_line(rest, acc)
+  end
+
+  defp do_tokenize(<<"nil", rest::binary>>, acc) do
+    do_tokenize(rest, ["nil" | acc])
   end
 
   # Unmatched binary
@@ -239,7 +312,7 @@ defmodule IvroneDsl.Processor.Lexer do
 
       true ->
         # Unmatched code. error will be generated!
-        {:error, acc, bin, "Unknown expression in line!"}
+        {:error, acc, bin, "Unknown expression in line! #{Enum.count(acc)}"}
     end
   end
 
@@ -252,9 +325,11 @@ defmodule IvroneDsl.Processor.Lexer do
         if String.contains?(string, "\n") do
           {:error, acc, rest, "expected ' for end of string!"}
         else
+          {cmp_string, _} = Code.eval_string("\"" <> String.replace(string, "\"", "\\\"") <> "\"")
+
           rest
           |> String.slice(loc..-1)
-          |> do_tokenize([string | acc])
+          |> do_tokenize([cmp_string | acc])
         end
 
       _ ->
@@ -309,4 +384,9 @@ defmodule IvroneDsl.Processor.Lexer do
   defp inject_ending(string) do
     Regex.replace(@r_eol, string, ")\n", global: false)
   end
+
+  @doc false
+  def get_lang_ids, do: @lang_ids
+  @doc false
+  def get_lang_ops, do: @lang_ops
 end

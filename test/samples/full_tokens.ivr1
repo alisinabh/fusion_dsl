@@ -1,7 +1,7 @@
 FORMAT: IVRONE1
-NAME: IFilmGame
-DB: IFilmGame
-SOUNDS: ifilmmulti
+NAME: TestApp
+DB: TestDb
+SOUNDS: testsounddir
 
 def main:
   play 'vwelcome' + (rand 1, 50)
@@ -19,6 +19,11 @@ def main:
     goto fix_proc
   end
 
+  if $code == '1'
+    play 'hi'
+    play 'test'
+  end
+
 def sample_proc:
   play 'sample_sound'
   $mobile = keycheck 'sample_sound', 10
@@ -26,7 +31,7 @@ def sample_proc:
 
 
 def get_account:
-  $account = @db.find.account %'{"mobile": $mobile}'
+  $account = db_find 'account', %'{"mobile": $mobile}'
   if $account == nil
-    $account = @db.create.account %'{"mobile": $mobile, "tp": 0, "questions": []}'
+    $account = db_insert 'account', %'{"mobile": $mobile, "tp": 0, "questions": []}'
   end

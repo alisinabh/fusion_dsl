@@ -3,23 +3,13 @@ defmodule IvroneDsl do
   Documentation for IvroneDsl.
   """
 
-  @doc """
-  Hello world.
+  def test_ast_begin(filename \\ "test/samples/arrays.ivr1") do
+    {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(File.read!(filename))
 
-  ## Examples
+    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
+    {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
 
-      iex> IvroneDsl.hello
-      :world
-
-  """
-  def hello do
-    {:ok, config, tokens} = IvroneDsl.Processor.Lexer.tokenize(File.read!("begin.ivr"))
-    sp = IvroneDsl.Processor.Lexer.split_by_lines(tokens)
-  end
-
-  def test_ast_begin do
-    {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(File.read!("begin.ivr"))
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens)
-    IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
+    IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
   end
 end

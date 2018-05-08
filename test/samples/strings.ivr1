@@ -1,0 +1,34 @@
+FORMAT: IVRONE1
+NAME: TestApp
+DB: TestDb
+SOUNDS: testsounddir
+
+def main:
+  $result = ''
+  $_test = 'hello world'
+  $world = replace($_test, 'hello ', '')
+  $world_2 = slice($_test, 6)
+  $w = slice($_test, 6, 1)
+
+  $result += ($world == 'world') + ','
+  $result += ($world_2 == 'world') + ','
+
+  $result += ($w == 'w') + ','
+  $result += (length($_test) == 11) + ','
+
+  $result += (index_of($_test, 'h') == 0) + ','
+  $result += (index_of($_test, 'k') == nil) + ','
+
+  $result += (last_index_of($_test, 'l') == 9) + ','
+  $result += (last_index_of($_test, 'k') == nil) + ','
+
+  $result += (contains($_test, 'ell')) + ','
+  $result += (contains($_test, 'fell') == false) + ','
+
+  $result += (starts_with($_test, 'he')) + ','
+  $result += (starts_with($_test, 'hele') == false) + ','
+
+  $result += (ends_with($_test, 'ld')) + ','
+  $result += (ends_with($_test, 'qrl') == false) + ','
+
+# Correct: 14 true in a string seprated with `,`
