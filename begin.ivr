@@ -36,7 +36,7 @@ def main:
 
   $test_str = 'AalAm alisina'
   $r = regex('([A-Z]+)')
-  $d = regex_scan($r, $test_str)
+  $d = regex_run($r, $test_str)
   $test_arr = [3, 1, 2, 3, 4]
   $res = slice($test_str,1, 2)
   # $a = 'sa\'\nlam\''

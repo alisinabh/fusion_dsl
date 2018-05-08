@@ -8,6 +8,7 @@ defmodule IvroneDslTest do
   @coditional_file "test/samples/conditional.ivr1"
   @strings_file "test/samples/strings.ivr1"
   @arrays_file "test/samples/arrays.ivr1"
+  @regex_file "test/samples/regex.ivr1"
 
   @full_tokens_first_ln 6
   @full_tokens_last_ln 37
@@ -23,6 +24,7 @@ defmodule IvroneDslTest do
   @correct_conditinal_result "start 1,1,1,1,1,1,1,end"
   @correct_strings_trues 14
   @correct_arrays_trues 15
+  @correct_regex_trues 4
 
   test "lexer lang-id order is correct" do
     [id | t] = IvroneDsl.Processor.Lexer.get_lang_ids()
@@ -125,6 +127,24 @@ defmodule IvroneDslTest do
 
     correct =
       Enum.reduce(1..@correct_arrays_trues, "", fn _x, acc ->
+        "true," <> acc
+      end)
+
+    assert result == correct
+  end
+
+  test "Regex operations work as expected" do
+    file_data = File.read!(@regex_file)
+    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+
+    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
+    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    result = env.vars["result"]
+
+    correct =
+      Enum.reduce(1..@correct_regex_trues, "", fn _x, acc ->
         "true," <> acc
       end)
 

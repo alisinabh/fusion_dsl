@@ -826,7 +826,7 @@ defmodule IvroneDsl.Runtime.Executor do
 
     cond do
       is_binary(string) ->
-        {:ok, Regex.run(regex, string, return: :index), env}
+        {:ok, norm_regex(Regex.run(regex, string, return: :index)), env}
 
       true ->
         error(prog, ctx, "Invalid arguments for regex run: #{inspect(f_args)}")
@@ -863,11 +863,25 @@ defmodule IvroneDsl.Runtime.Executor do
 
     cond do
       is_binary(string) ->
-        {:ok, Regex.scan(regex, string, return: :index), env}
+        {:ok, norm_regex(Regex.scan(regex, string, return: :index)), env}
 
       true ->
         error(prog, ctx, "Invalid arguments for regex replace: #{inspect(f_args)}")
     end
+  end
+  
+  defp norm_regex(list, acc \\ [])
+  defp norm_regex([a | t], acc) when is_tuple(a) do
+    norm_regex(t, [Tuple.to_list(a) | acc])
+  end
+
+  defp norm_regex([a | t], acc) when is_list(a) do
+    a = norm_regex(a, [])
+    norm_regex(t, [a | acc])
+  end
+
+  defp norm_regex([], acc) do
+    Enum.reverse(acc)
   end
 
   defp execute_ast(prog, {:play, ctx, args}, env) do
