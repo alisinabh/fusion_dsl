@@ -1,4 +1,8 @@
 defmodule IvroneDsl.Runtime.Enviornment do
+  @moduledoc """
+  Envoirnment struct and behaviours for the programs
+  """
+
   defstruct vars: %{},
             mod: IvroneDsl.Runtime.Enviornments.TestEnviornment,
             sys_vars: %{},
@@ -27,7 +31,8 @@ defmodule IvroneDsl.Runtime.Enviornment do
               binary()
             ) :: {:ok, binary(), env()}
 
-  @callback log(prog(), env(), binary() | Integer.t() | Number.t()) :: {:ok, nil, env()}
+  @callback log(prog(), env(), binary() | Integer.t() | Number.t()) ::
+              {:ok, nil, env()}
 
   @doc """
   Prepares enviornments data and returns the data

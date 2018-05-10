@@ -1,4 +1,8 @@
 defmodule IvroneDsl.Runtime.Enviornments.TestEnviornment do
+  @moduledoc """
+  Enviornment for console testing a program
+  """
+
   @behaviour IvroneDsl.Runtime.Enviornment
 
   @doc """
@@ -11,22 +15,43 @@ defmodule IvroneDsl.Runtime.Enviornments.TestEnviornment do
   end
 
   @impl true
-  def keycheck(prog, env, file_name, digit_count, timeout, acc_digits, timeout_v, wrongkey_v) do
-    IO.puts(
-      "keycheck(#{file_name}, #{digit_count}, #{timeout}, #{acc_digits}, #{timeout_v}, #{
+  def keycheck(
+        prog,
+        env,
+        file_name,
+        digit_count,
+        timeout,
+        acc_digits,
+        timeout_v,
         wrongkey_v
-      })"
+      ) do
+    IO.puts(
+      "keycheck(#{file_name}, #{digit_count}, #{timeout}, #{acc_digits}, #{
+        timeout_v
+      }, #{wrongkey_v})"
     )
 
     data = IO.gets("enter_keys timeout(#{timeout}s): ")
 
     data = norm_input(data)
 
-    if input_ok_digits?(data, acc_digits) and String.length(data) <= digit_count do
-      {:ok, data, env}
-    else
-      play(prog, env, wrongkey_v)
-      keycheck(prog, env, file_name, digit_count, timeout, acc_digits, timeout_v, wrongkey_v)
+    cond do
+      input_ok_digits?(data, acc_digits) and String.length(data) <= digit_count ->
+        {:ok, data, env}
+
+      true ->
+        play(prog, env, wrongkey_v)
+
+        keycheck(
+          prog,
+          env,
+          file_name,
+          digit_count,
+          timeout,
+          acc_digits,
+          timeout_v,
+          wrongkey_v
+        )
     end
   end
 

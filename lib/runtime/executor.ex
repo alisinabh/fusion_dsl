@@ -9,7 +9,10 @@ defmodule IvroneDsl.Runtime.Executor do
 
   @jump_start_throttle Application.get_env(:ivrone_dsl, :jump_start_throttle)
   @jump_throttle_every Application.get_env(:ivrone_dsl, :jump_throttle_every)
-  @jump_throttle_time_ms Application.get_env(:ivrone_dsl, :jump_throttle_time_ms)
+  @jump_throttle_time_ms Application.get_env(
+                           :ivrone_dsl,
+                           :jump_throttle_time_ms
+                         )
 
   @doc """
   Executes the program in given enviornment
@@ -35,7 +38,8 @@ defmodule IvroneDsl.Runtime.Executor do
         jump_c = env.jump_c + 1
         env = Map.put(env, :jump_c, jump_c)
 
-        if opt and jump_c > @jump_start_throttle and rem(jump_c, @jump_throttle_every) == 0 do
+        if opt and jump_c > @jump_start_throttle and
+             rem(jump_c, @jump_throttle_every) == 0 do
           :timer.sleep(@jump_throttle_time_ms)
         end
 
@@ -78,7 +82,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left and right, env}
 
       true ->
-        error(prog, ctx, "And(&&) is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(
+          prog,
+          ctx,
+          "And(&&) is not supported for #{inspect(left)} and #{inspect(right)}"
+        )
     end
   end
 
@@ -90,7 +98,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left or right, env}
 
       true ->
-        error(prog, ctx, "Or(||) is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(
+          prog,
+          ctx,
+          "Or(||) is not supported for #{inspect(left)} and #{inspect(right)}"
+        )
     end
   end
 
@@ -120,7 +132,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left ++ right, env}
 
       true ->
-        error(prog, ctx, "Add(+) is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(
+          prog,
+          ctx,
+          "Add(+) is not supported for #{inspect(left)} and #{inspect(right)}"
+        )
     end
   end
 
@@ -132,7 +148,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left - right, env}
 
       true ->
-        error(prog, ctx, "Sub(-) is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(
+          prog,
+          ctx,
+          "Sub(-) is not supported for #{inspect(left)} and #{inspect(right)}"
+        )
     end
   end
 
@@ -144,7 +164,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left * right, env}
 
       true ->
-        error(prog, ctx, "Mult(*) is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(
+          prog,
+          ctx,
+          "Mult(*) is not supported for #{inspect(left)} and #{inspect(right)}"
+        )
     end
   end
 
@@ -156,7 +180,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, left / right, env}
 
       true ->
-        error(prog, ctx, "Div(/) is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(
+          prog,
+          ctx,
+          "Div(/) is not supported for #{inspect(left)} and #{inspect(right)}"
+        )
     end
   end
 
@@ -168,7 +196,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, rem(left, right), env}
 
       true ->
-        error(prog, ctx, "Mod(%) is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(
+          prog,
+          ctx,
+          "Mod(%) is not supported for #{inspect(left)} and #{inspect(right)}"
+        )
     end
   end
 
@@ -177,7 +209,13 @@ defmodule IvroneDsl.Runtime.Executor do
 
     cond do
       is_tuple(left) or is_tuple(right) ->
-        error(prog, ctx, "Equals(==) is not supported for #{inspect(left)} and #{inspect(right)}")
+        error(
+          prog,
+          ctx,
+          "Equals(==) is not supported for #{inspect(left)} and #{
+            inspect(right)
+          }"
+        )
 
       is_nil(left) ->
         {:ok, is_nil(right), env}
@@ -204,7 +242,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "Not-Equals(!=) is not supported for #{inspect(left)} and #{inspect(right)}"
+          "Not-Equals(!=) is not supported for #{inspect(left)} and #{
+            inspect(right)
+          }"
         )
     end
   end
@@ -220,7 +260,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "Lower-Than-Equal(<=) is not supported for #{inspect(left)} and #{inspect(right)}"
+          "Lower-Than-Equal(<=) is not supported for #{inspect(left)} and #{
+            inspect(right)
+          }"
         )
     end
   end
@@ -236,7 +278,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "Greater-Than-Equal(>=) is not supported for #{inspect(left)} and #{inspect(right)}"
+          "Greater-Than-Equal(>=) is not supported for #{inspect(left)} and #{
+            inspect(right)
+          }"
         )
     end
   end
@@ -252,7 +296,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "Lower-Than(<) is not supported for #{inspect(left)} and #{inspect(right)}"
+          "Lower-Than(<) is not supported for #{inspect(left)} and #{
+            inspect(right)
+          }"
         )
     end
   end
@@ -268,7 +314,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "Greater-Than(>) is not supported for #{inspect(left)} and #{inspect(right)}"
+          "Greater-Than(>) is not supported for #{inspect(left)} and #{
+            inspect(right)
+          }"
         )
     end
   end
@@ -319,7 +367,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, Enum.random(lower..upper), env}
 
       true ->
-        error(prog, ctx, "rand is not supported for #{inspect(lower)} and #{inspect(upper)}")
+        error(
+          prog,
+          ctx,
+          "rand is not supported for #{inspect(lower)} and #{inspect(upper)}"
+        )
     end
   end
 
@@ -416,7 +468,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "Only boolean (true|false) is accepted in condition. not #{inspect(condition)}"
+          "Only boolean (true|false) is accepted in condition. not #{
+            inspect(condition)
+          }"
         )
     end
   end
@@ -425,7 +479,9 @@ defmodule IvroneDsl.Runtime.Executor do
     case prog.procedures[proc] do
       proc_asts when is_list(proc_asts) ->
         :timer.sleep(50)
-        # Sleep is to prevent high cpu utilization in case of an infinity recursion
+
+        # Sleep is to prevent high cpu utilization in case of an infinity
+        # recursion
         env = Map.put(env, :cur_proc, [proc | env.cur_proc])
         {:end, env} = execute_procedure(prog, proc_asts, env)
         {:ok, nil, env}
@@ -443,7 +499,11 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, Enum.at(array, index), env}
 
       true ->
-        error(prog, ctx, "elem is not supported for #{inspect(array)} at #{inspect(index)}")
+        error(
+          prog,
+          ctx,
+          "elem is not supported for #{inspect(array)} at #{inspect(index)}"
+        )
     end
   end
 
@@ -458,9 +518,8 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "insert is not supported for #{inspect(array)} and #{inspect(value)} at #{
-            inspect(index)
-          }"
+          "insert is not supported for #{inspect(array)} " <>
+            "and #{inspect(value)} at #{inspect(index)}"
         )
     end
   end
@@ -474,14 +533,16 @@ defmodule IvroneDsl.Runtime.Executor do
 
     cond do
       is_number(amount) ->
-        (amount * 1000)
-        |> trunc
-        |> :timer.sleep()
+        :timer.sleep(trunc(amount * 1000))
 
         {:ok, nil, env}
 
       true ->
-        error(prog, ctx, "wait should be called with a valid number. not #{inspect(amount)}")
+        error(
+          prog,
+          ctx,
+          "wait should be called with a valid number. not #{inspect(amount)}"
+        )
     end
   end
 
@@ -503,7 +564,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "remove is not supported with args: #{inspect(value)} and #{inspect(index)}"
+          "remove is not supported with args: #{inspect(value)} and #{
+            inspect(index)
+          }"
         )
     end
   end
@@ -513,7 +576,11 @@ defmodule IvroneDsl.Runtime.Executor do
 
     cond do
       String.contains?(name, ".") ->
-        error(prog, ctx, "Dispose only works on variables (not map elements) $#{inspect(name)}")
+        error(
+          prog,
+          ctx,
+          "Dispose only works on variables (not map elements) $#{inspect(name)}"
+        )
 
       true ->
         {:ok, value, Map.put(env, :vars, Map.delete(env.vars, name))}
@@ -525,24 +592,7 @@ defmodule IvroneDsl.Runtime.Executor do
 
     variables = Regex.scan(@r_json_vars, json)
 
-    {env, json} =
-      case variables do
-        [] ->
-          {env, json}
-
-        _ ->
-          Enum.reduce(variables, {env, json}, fn [name, var], acc ->
-            {env, json} = acc
-
-            case get_var(prog, var, env, ctx) do
-              {:ok, v, env} ->
-                {env, String.replace(json, name, to_string(v))}
-
-              {:error} ->
-                {env, json}
-            end
-          end)
-      end
+    {json, env} = replace_json_vars(variables, json, prog, env, ctx)
 
     case Poison.decode(json) do
       {:ok, json_data} ->
@@ -567,9 +617,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "contains works on arrays and strings only. called with: #{inspect(source)} and #{
-            inspect(element)
-          }"
+          "contains works on arrays and strings only. called with: #{
+            inspect(source)
+          } and #{inspect(element)}"
         )
     end
   end
@@ -597,9 +647,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "index_of works on arrays and strings only. called with: #{inspect(source)} and #{
-            inspect(element)
-          }"
+          "index_of works on arrays and strings only. called with: #{
+            inspect(source)
+          } and #{inspect(element)}"
         )
     end
   end
@@ -637,9 +687,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "last_index_of works on arrays and strings only. called with: #{inspect(source)} and #{
-            inspect(element)
-          }"
+          "last_index_of works on arrays and strings only. called with: #{
+            inspect(source)
+          } and #{inspect(element)}"
         )
     end
   end
@@ -664,9 +714,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "starts_with works on arrays and strings only. called with: #{inspect(source)} and #{
-            inspect(element)
-          }"
+          "starts_with works on arrays and strings only. called with: #{
+            inspect(source)
+          } and #{inspect(element)}"
         )
     end
   end
@@ -696,31 +746,23 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "ends_with works on arrays and strings only. called with: #{inspect(source)} and #{
-            inspect(element)
-          }"
+          "ends_with works on arrays and strings only. called with: #{
+            inspect(source)
+          } and #{inspect(element)}"
         )
     end
   end
 
   defp execute_ast(prog, {:replace, ctx, [_, _, _] = args}, env) do
-    {:ok, [source, element, replace], env} = process_args(prog, env, args, [])
+    {:ok, [source, element, replacement], env} =
+      process_args(prog, env, args, [])
 
     cond do
       is_binary(source) and is_binary(element) ->
-        {:ok, String.replace(source, element, replace), env}
+        {:ok, String.replace(source, element, replacement), env}
 
       is_list(source) ->
-        result =
-          source
-          |> Enum.reduce([], fn x, acc ->
-            if element == x do
-              [replace | acc]
-            else
-              [x | acc]
-            end
-          end)
-          |> Enum.reverse()
+        result = replace_in_list(source, element, replacement)
 
         {:ok, result, env}
 
@@ -728,9 +770,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "replace works on arrays and strings only. called with: #{inspect(source)} and #{
-            inspect(element)
-          } and #{inspect(replace)}"
+          "replace works on arrays and strings only. called with: #{
+            inspect(source)
+          } and #{inspect(element)} and #{inspect(replacement)}"
         )
     end
   end
@@ -749,7 +791,9 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "reverse works on arrays and strings only. called with: #{inspect(source)}"
+          "reverse works on arrays and strings only. called with: #{
+            inspect(source)
+          }"
         )
     end
   end
@@ -768,13 +812,16 @@ defmodule IvroneDsl.Runtime.Executor do
         error(
           prog,
           ctx,
-          "length works on arrays and strings only. called with: #{inspect(source)}"
+          "length works on arrays and strings only. called with: #{
+            inspect(source)
+          }"
         )
     end
   end
 
   defp execute_ast(prog, {:slice, ctx, [_, _ | _] = args}, env) do
-    {:ok, [source, start | count] = f_args, env} = process_args(prog, env, args, [])
+    {:ok, [source, start | count] = f_args, env} =
+      process_args(prog, env, args, [])
 
     count =
       case count do
@@ -817,12 +864,17 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, Regex.compile!(regex_str, opt), env}
 
       true ->
-        error(prog, ctx, "Invalid arguments for regex compile: #{inspect(f_args)}")
+        error(
+          prog,
+          ctx,
+          "Invalid arguments for regex compile: #{inspect(f_args)}"
+        )
     end
   end
 
   defp execute_ast(prog, {:regex_run, ctx, args}, env) do
-    {:ok, [%Regex{} = regex, string] = f_args, env} = process_args(prog, env, args, [])
+    {:ok, [%Regex{} = regex, string] = f_args, env} =
+      process_args(prog, env, args, [])
 
     cond do
       is_binary(string) ->
@@ -834,14 +886,19 @@ defmodule IvroneDsl.Runtime.Executor do
   end
 
   defp execute_ast(prog, {:regex_match, ctx, args}, env) do
-    {:ok, [%Regex{} = regex, string] = f_args, env} = process_args(prog, env, args, [])
+    {:ok, [%Regex{} = regex, string] = f_args, env} =
+      process_args(prog, env, args, [])
 
     cond do
       is_binary(string) ->
         {:ok, Regex.match?(regex, string), env}
 
       true ->
-        error(prog, ctx, "Invalid arguments for regex match: #{inspect(f_args)}")
+        error(
+          prog,
+          ctx,
+          "Invalid arguments for regex match: #{inspect(f_args)}"
+        )
     end
   end
 
@@ -854,23 +911,33 @@ defmodule IvroneDsl.Runtime.Executor do
         {:ok, Regex.replace(regex, string, replacement), env}
 
       true ->
-        error(prog, ctx, "Invalid arguments for regex replace: #{inspect(f_args)}")
+        error(
+          prog,
+          ctx,
+          "Invalid arguments for regex replace: #{inspect(f_args)}"
+        )
     end
   end
 
   defp execute_ast(prog, {:regex_scan, ctx, args}, env) do
-    {:ok, [%Regex{} = regex, string] = f_args, env} = process_args(prog, env, args, [])
+    {:ok, [%Regex{} = regex, string] = f_args, env} =
+      process_args(prog, env, args, [])
 
     cond do
       is_binary(string) ->
         {:ok, norm_regex(Regex.scan(regex, string, return: :index)), env}
 
       true ->
-        error(prog, ctx, "Invalid arguments for regex replace: #{inspect(f_args)}")
+        error(
+          prog,
+          ctx,
+          "Invalid arguments for regex replace: #{inspect(f_args)}"
+        )
     end
   end
-  
+
   defp norm_regex(list, acc \\ [])
+
   defp norm_regex([a | t], acc) when is_tuple(a) do
     norm_regex(t, [Tuple.to_list(a) | acc])
   end
@@ -889,9 +956,14 @@ defmodule IvroneDsl.Runtime.Executor do
 
     escape_digits =
       case t do
-        [] -> "0123456789"
-        [ed] when is_binary(ed) -> ed
-        _ -> error(prog, ctx, "Unknown parametes given to play: #{inspect(args)}")
+        [] ->
+          "0123456789"
+
+        [ed] when is_binary(ed) ->
+          ed
+
+        _ ->
+          error(prog, ctx, "Unknown parametes given to play: #{inspect(args)}")
       end
 
     cond do
@@ -999,5 +1071,33 @@ defmodule IvroneDsl.Runtime.Executor do
 
   defp error(prog, ctx, msg) do
     raise("Line: #{ctx[:ln]}: #{msg}")
+  end
+
+  defp replace_in_list(source, pattern, replacement),
+    do:
+      source
+      |> Enum.reduce([], fn x, acc ->
+        if x == pattern do
+          [replacement | acc]
+        else
+          [x | acc]
+        end
+      end)
+      |> Enum.reverse()
+
+  defp replace_json_vars([], json, prog, env, _ctx), do: {json, env}
+
+  defp replace_json_vars(variables, json, prog, env, ctx) do
+    Enum.reduce(variables, {env, json}, fn [name, var], acc ->
+      {json, env} = acc
+
+      case get_var(prog, var, env, ctx) do
+        {:ok, v, env} ->
+          {String.replace(json, name, to_string(v)), env}
+
+        {:error} ->
+          {json, env}
+      end
+    end)
   end
 end

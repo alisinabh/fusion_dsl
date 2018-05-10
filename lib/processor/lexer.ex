@@ -325,7 +325,10 @@ defmodule IvroneDsl.Processor.Lexer do
         if String.contains?(string, "\n") do
           {:error, acc, rest, "expected ' for end of string!"}
         else
-          {cmp_string, _} = Code.eval_string("\"" <> String.replace(string, "\"", "\\\"") <> "\"")
+          {cmp_string, _} =
+            Code.eval_string(
+              "\"" <> String.replace(string, "\"", "\\\"") <> "\""
+            )
 
           rest
           |> String.slice(loc..-1)

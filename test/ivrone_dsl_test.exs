@@ -2,6 +2,11 @@ defmodule IvroneDslTest do
   use ExUnit.Case
   doctest IvroneDsl
 
+  alias IvroneDsl.Processor.Lexer
+  alias IvroneDsl.Processor.AstProcessor
+  alias IvroneDsl.Runtime.Enviornment
+  alias IvroneDsl.Runtime.Executor
+
   @full_tokens_file "test/samples/full_tokens.ivr1"
   @scopes_file "test/samples/scopes.ivr1"
   @logical_file "test/samples/logical.ivr1"
@@ -27,7 +32,7 @@ defmodule IvroneDslTest do
   @correct_regex_trues 4
 
   test "lexer lang-id order is correct" do
-    [id | t] = IvroneDsl.Processor.Lexer.get_lang_ids()
+    [id | t] = Lexer.get_lang_ids()
     assert ensure_desc(t, String.length(id)) == :ok
   end
 
@@ -42,14 +47,14 @@ defmodule IvroneDslTest do
 
   test "lexical analyser works on all types of tokens" do
     file_data = File.read!(@full_tokens_file)
-    assert {:ok, _conf, _tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    assert {:ok, _conf, _tokens} = Lexer.tokenize(file_data)
   end
 
   test "line splitter is correct on line numbers" do
     file_data = File.read!(@full_tokens_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
 
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
 
     assert is_list(lines)
 
@@ -59,52 +64,52 @@ defmodule IvroneDslTest do
 
   test "AST generation does not give any errors on full_tokens" do
     file_data = File.read!(@full_tokens_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-    assert {:ok, _ast} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, _ast} = AstProcessor.generate_ast(conf, lines)
   end
 
   test "no errors generated in different scope complexities" do
     file_data = File.read!(@scopes_file)
-    assert {:ok, _conf, _tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    assert {:ok, _conf, _tokens} = Lexer.tokenize(file_data)
   end
 
   test "Headers are parsed correctly" do
     file_data = File.read!(@full_tokens_file)
-    assert {:ok, conf, _tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
+    assert {:ok, conf, _tokens} = Lexer.tokenize(file_data)
     assert @correct_config = conf
   end
 
   test "Logics test produces expected result" do
     file_data = File.read!(@logical_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
-    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    {:ok, env} = Enviornment.prepare_env()
+    {:end, env} = Executor.execute(ast_data.prog, env)
     assert env.vars["result"] == @correct_logic_result
   end
 
   test "Conditional test produces expected result" do
     file_data = File.read!(@coditional_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
-    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    {:ok, env} = Enviornment.prepare_env()
+    {:end, env} = Executor.execute(ast_data.prog, env)
     assert env.vars["result"] == @correct_conditinal_result
   end
 
   test "String operations work as expected" do
     file_data = File.read!(@strings_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
-    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    {:ok, env} = Enviornment.prepare_env()
+    {:end, env} = Executor.execute(ast_data.prog, env)
     result = env.vars["result"]
 
     correct =
@@ -117,12 +122,12 @@ defmodule IvroneDslTest do
 
   test "Array operations work as expected" do
     file_data = File.read!(@arrays_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
-    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    {:ok, env} = Enviornment.prepare_env()
+    {:end, env} = Executor.execute(ast_data.prog, env)
     result = env.vars["result"]
 
     correct =
@@ -135,12 +140,12 @@ defmodule IvroneDslTest do
 
   test "Regex operations work as expected" do
     file_data = File.read!(@regex_file)
-    assert {:ok, conf, tokens} = IvroneDsl.Processor.Lexer.tokenize(file_data)
-    lines = IvroneDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-    assert {:ok, ast_data} = IvroneDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
-    {:end, env} = IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+    {:ok, env} = Enviornment.prepare_env()
+    {:end, env} = Executor.execute(ast_data.prog, env)
     result = env.vars["result"]
 
     correct =

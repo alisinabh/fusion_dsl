@@ -11,7 +11,13 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   alias IvroneDsl.Processor.Program
 
-  @default_state %{proc: nil, ln: 0, prog: %Program{}, end_asts: [], clauses: []}
+  @default_state %{
+    proc: nil,
+    ln: 0,
+    prog: %Program{},
+    end_asts: [],
+    clauses: []
+  }
 
   @clause_beginners ["if", "for", "while"]
   @noops ["noop"]
@@ -152,7 +158,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     Enum.reverse(acc)
   end
 
-  defp do_reorder_operators([token | t], [op | _] = ops, acc) when op == token do
+  defp do_reorder_operators([token | t], [op | _] = ops, acc)
+       when op == token do
     acc = insert_operator(acc, token, [], 0)
     {:ok, t_count} = close_scope(t, 0, 0)
     t = List.insert_at(t, t_count, ")")
@@ -297,7 +304,9 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
         state =
           state
-          |> Map.put(:end_asts, [{:jump_to, [state.ln, 0, opt]} | state.end_asts])
+          |> Map.put(:end_asts, [
+            {:jump_to, [state.ln, 0, opt]} | state.end_asts
+          ])
           |> Map.put(:clauses, [{:loop, [state.ln, 0, opt]} | state.clauses])
 
         {:ok, {:jump_not, [ln: state.ln], [while_cond_ast, skip_amount]}, state}
@@ -374,7 +383,9 @@ defmodule IvroneDsl.Processor.AstProcessor do
 
   # Json objects
   defp gen_ast([<<"%'", str::binary>> | _t], _t_lines, state) do
-    {:ok, {:json, [ln: state.ln], [String.slice(str, 0, String.length(str) - 1)]}, state}
+    {:ok,
+     {:json, [ln: state.ln], [String.slice(str, 0, String.length(str) - 1)]},
+     state}
   end
 
   # Numbers
@@ -437,7 +448,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     end
   end
 
-  # Operations that actualy does not do anything at runtime but ast position matters
+  # Operations that actualy does not do anything at runtime but ast
+  # position matters
   Enum.each(@noops, fn noop ->
     defp gen_ast([unquote(noop) | _], _t_lines, state) do
       {:ok, {:noop, [ln: state.ln], []}, state}
@@ -524,7 +536,12 @@ defmodule IvroneDsl.Processor.AstProcessor do
   end
 
   # c_else = catch else: determines if else should be catched or not
-  defp find_end_else(token_list, inner_clause_count \\ 0, acc \\ 0, c_else \\ true)
+  defp find_end_else(
+         token_list,
+         inner_clause_count \\ 0,
+         acc \\ 0,
+         c_else \\ true
+       )
 
   Enum.each(@clause_beginners, fn cl ->
     defp find_end_else([[_, "(", unquote(cl) | _] | t], inn, acc, c_else) do
@@ -540,7 +557,8 @@ defmodule IvroneDsl.Processor.AstProcessor do
     {:ok, acc + 1}
   end
 
-  defp find_end_else([[_, "(", "end", ")"] | t], inn, acc, c_else) when inn > 0 do
+  defp find_end_else([[_, "(", "end", ")"] | t], inn, acc, c_else)
+       when inn > 0 do
     find_end_else(t, inn - 1, acc + 1, c_else)
   end
 
