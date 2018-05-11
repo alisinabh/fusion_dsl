@@ -1,16 +1,16 @@
-defmodule IvroneDsl.Runtime.Executor do
+defmodule FusionDsl.Runtime.Executor do
   @moduledoc """
   Executes an Ivrone program
   """
 
-  alias IvroneDsl.Processor.Program
+  alias FusionDsl.Processor.Program
 
   @r_json_vars ~r/\$([A-Za-z]{1}[A-Za-z0-9.\_]*)/
 
-  @jump_start_throttle Application.get_env(:ivrone_dsl, :jump_start_throttle)
-  @jump_throttle_every Application.get_env(:ivrone_dsl, :jump_throttle_every)
+  @jump_start_throttle Application.get_env(:fusion_dsl, :jump_start_throttle)
+  @jump_throttle_every Application.get_env(:fusion_dsl, :jump_throttle_every)
   @jump_throttle_time_ms Application.get_env(
-                           :ivrone_dsl,
+                           :fusion_dsl,
                            :jump_throttle_time_ms
                          )
 

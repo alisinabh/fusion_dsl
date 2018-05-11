@@ -1,4 +1,4 @@
-defmodule IvroneDsl.Processor.Program do
+defmodule FusionDsl.Processor.Program do
   @moduledoc """
   Program struct and functions
   """

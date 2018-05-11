@@ -1,9 +1,8 @@
-# IvroneDsl
+# FusionDsl
 
-Ivrone is a dynamic framework which enables non-coders to develop asterisk
-fast agi programs.
+FusionDsl is a domain specific language build on top of elixir.
 
-**Ivrone is still under heavy development and change. refere to [Todo list](#todo-list)**
+**FusionDsl is still under heavy development and change. refere to [Todo list](#todo-list)**
 
 ## Todo list
 
@@ -59,3 +58,8 @@ fast agi programs.
  - [x] round floats
  - [x] wait
  - [x] true/false keywords
+
+### Integration
+ - [ ] add new functions to config
+ - [ ] add new Environments
+ - [ ] implement functions

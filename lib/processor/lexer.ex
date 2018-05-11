@@ -1,4 +1,4 @@
-defmodule IvroneDsl.Processor.Lexer do
+defmodule FusionDsl.Processor.Lexer do
   @moduledoc """
   Tokenizer and normalizer for IVRONE DSL
   """
@@ -146,8 +146,8 @@ defmodule IvroneDsl.Processor.Lexer do
 
     #
     if String.ends_with?(code, "\n") do
-      # {:ok, env} = IvroneDsl.Runtime.Enviornment.prepare_env()
-      # IvroneDsl.Runtime.Executor.execute(ast_data.prog, env)
+      # {:ok, env} = FusionDsl.Runtime.Enviornment.prepare_env()
+      # FusionDsl.Runtime.Executor.execute(ast_data.prog, env)
       code
     else
       code <> "\n"

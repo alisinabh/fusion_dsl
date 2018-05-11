@@ -1,11 +1,11 @@
-defmodule IvroneDslTest do
+defmodule FusionDslTest do
   use ExUnit.Case
-  doctest IvroneDsl
+  doctest FusionDsl
 
-  alias IvroneDsl.Processor.Lexer
-  alias IvroneDsl.Processor.AstProcessor
-  alias IvroneDsl.Runtime.Enviornment
-  alias IvroneDsl.Runtime.Executor
+  alias FusionDsl.Processor.Lexer
+  alias FusionDsl.Processor.AstProcessor
+  alias FusionDsl.Runtime.Enviornment
+  alias FusionDsl.Runtime.Executor
 
   @full_tokens_file "test/samples/full_tokens.ivr1"
   @scopes_file "test/samples/scopes.ivr1"
@@ -20,7 +20,7 @@ defmodule IvroneDslTest do
 
   @correct_config %{
     db: "TestDb",
-    format: "IVRONE1",
+    format: "FUSION1",
     name: "TestApp",
     sounds: "testsounddir",
     start_code: 6
