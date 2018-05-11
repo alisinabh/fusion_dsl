@@ -1,9 +1,9 @@
-defmodule IvroneDsl.Runtime.Enviornments.TestEnviornment do
+defmodule FusionDsl.Runtime.Enviornments.TestEnviornment do
   @moduledoc """
   Enviornment for console testing a program
   """
 
-  @behaviour IvroneDsl.Runtime.Enviornment
+  @behaviour FusionDsl.Runtime.Enviornment
 
   @doc """
   Writes a line in test console like `play([file_name], [escape_digits])`

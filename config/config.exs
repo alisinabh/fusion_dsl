@@ -2,7 +2,7 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-config :ivrone_dsl,
+config :fusion_dsl,
   base_sound_path: "/var/lib/asterisk/sounds/fa/",
   jump_start_throttle: 200,
   jump_throttle_every: 20,
@@ -16,11 +16,11 @@ config :ivrone_dsl,
 
 # You can configure your application as:
 #
-#     config :ivrone_dsl, key: :value
+#     config :fusion_dsl, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:ivrone_dsl, :key)
+#     Application.get_env(:fusion_dsl, :key)
 #
 # You can also configure a 3rd-party app:
 #

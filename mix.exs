@@ -1,9 +1,9 @@
-defmodule IvroneDsl.MixProject do
+defmodule FusionDsl.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :ivrone_dsl,
+      app: :fusion_dsl,
       version: "0.1.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,

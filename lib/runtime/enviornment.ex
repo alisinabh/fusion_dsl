@@ -1,22 +1,22 @@
-defmodule IvroneDsl.Runtime.Enviornment do
+defmodule FusionDsl.Runtime.Enviornment do
   @moduledoc """
   Envoirnment struct and behaviours for the programs
   """
 
   defstruct vars: %{},
-            mod: IvroneDsl.Runtime.Enviornments.TestEnviornment,
+            mod: FusionDsl.Runtime.Enviornments.TestEnviornment,
             sys_vars: %{},
             agi: nil,
             last_user_action: DateTime.utc_now(),
             cur_proc: [:main],
             jump_c: 0
 
-  alias IvroneDsl.Processor.Program
+  alias FusionDsl.Processor.Program
 
   @type prog :: %Program{}
   @type env :: %__MODULE__{}
 
-  @base_sound_path Application.get_env(:ivrone_dsl, :base_sound_path)
+  @base_sound_path Application.get_env(:fusion_dsl, :base_sound_path)
 
   @callback play(prog(), env(), binary(), binary()) :: {:ok, binary(), env()}
 

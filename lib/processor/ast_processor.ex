@@ -1,4 +1,4 @@
-defmodule IvroneDsl.Processor.AstProcessor do
+defmodule FusionDsl.Processor.AstProcessor do
   @moduledoc """
   Functions for converting tokens to Abstract syntax trees
 
@@ -9,7 +9,7 @@ defmodule IvroneDsl.Processor.AstProcessor do
   ```
   """
 
-  alias IvroneDsl.Processor.Program
+  alias FusionDsl.Processor.Program
 
   @default_state %{
     proc: nil,
