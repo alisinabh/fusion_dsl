@@ -1,37 +1,53 @@
 FORMAT: FUSION1
-NAME: TestApp
-DB: TestDb
-SOUNDS: testsounddir
+NAME: FullTokenTest
+VERSION: 0.1.2-rc1
 
 def main:
-  play 'vwelcome' + (rand 1, 50)
-  # Comment test
+  $result = 'Start: '
+  $result += 'ad' + 'd' + 1 + ' '
+  $a = 7
+  $b = 4
+  $t = 5
+  goto do_logics
+  $a = -3
+  $t = 10
+  goto do_logics
+  $result += 'end'
 
-  $code = $obj_var.test
-
-  if @is_mobile == 1
-    if @is_alive
-      goto mob_proc
-    else
-      goto fix_proc
-    end
+def do_logics:
+  $result += $a + $b
+  $result += ','
+  $result += $a - $b
+  $result += ','
+  $result += $a * $b
+  $result += ','
+  $result += $a / $b
+  $result += ','
+  $result += $a % $b
+  $result += ','
+  $a1 = $a
+  $b1 = $b + 1
+  $a1 += 1
+  $a1 *= 2
+  $a1 -= 4
+  $a1 /= 3
+  $result += $a1 + ',' + (round $a1) + ','
+  $result += ($b1 + 6) + ','
+  $result += ($t == 2) + ','
+  $result += ($t == 5) + ','
+  $result += (5.0 == $t) + ','
+  $result += ($t < 2) + ','
+  $result += ($t >= 5) + ','
+  $result += ($t > 5) + ','
+  $result += ($t < 10) + ','
+  $result += ($t <= 5) + ','
+  if $t <= 5
+    $result += 'if,'
   else
-    goto fix_proc
+    $result += 'else,'
   end
-
-  if $code == '1'
-    play 'hi'
-    play 'test'
+  $i = 0
+  while $i <= $t
+    $i += 1
   end
-
-def sample_proc:
-  play 'sample_sound'
-  $mobile = keycheck 'sample_sound', 10
-  goto get_account
-
-
-def get_account:
-  $account = db_find 'account', %'{"mobile": $mobile}'
-  if $account == nil
-    $account = db_insert 'account', %'{"mobile": $mobile, "tp": 0, "questions": []}'
-  end
+  $result += $i + ' '

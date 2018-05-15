@@ -1,7 +1,6 @@
 FORMAT: FUSION1
-NAME: TestApp
-DB: TestDb
-SOUNDS: testsounddir
+NAME: Conditional Test
+VERSION: 12 rc1
 
 def main:
   # Test condition

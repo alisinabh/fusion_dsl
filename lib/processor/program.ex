@@ -1,7 +1,7 @@
 defmodule FusionDsl.Processor.Program do
   @moduledoc """
-  Program struct and functions
+  Program struct
   """
 
-  defstruct [:name, :version, :db, :sound_dir, procedures: %{}]
+  defstruct [:name, :version, config: [], fusion_version: nil, procedures: %{}]
 end

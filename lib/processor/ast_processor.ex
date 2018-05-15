@@ -62,10 +62,6 @@ defmodule FusionDsl.Processor.AstProcessor do
 
   @functions [
     :rand,
-    :db_find,
-    :db_insert,
-    :db_update,
-    :db_remove,
     :goto,
     :to_number,
     :to_string,
@@ -77,8 +73,6 @@ defmodule FusionDsl.Processor.AstProcessor do
     :wait,
     :remove,
     :dispose,
-    :play,
-    :keycheck,
     :contains,
     :index_of,
     :last_index_of,

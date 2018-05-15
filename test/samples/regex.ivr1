@@ -1,7 +1,6 @@
 FORMAT: FUSION1
-NAME: TestApp
-DB: TestDb
-SOUNDS: testsounddir
+NAME: RegexTest
+VERSION: 54.1.2
 
 def main:
   $reg1 = regex('\h([A-Za-z]+)')

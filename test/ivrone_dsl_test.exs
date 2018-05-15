@@ -15,15 +15,14 @@ defmodule FusionDslTest do
   @arrays_file "test/samples/arrays.ivr1"
   @regex_file "test/samples/regex.ivr1"
 
-  @full_tokens_first_ln 6
-  @full_tokens_last_ln 37
+  @full_tokens_first_ln 5
+  @full_tokens_last_ln 53
 
   @correct_config %{
-    db: "TestDb",
     format: "FUSION1",
-    name: "TestApp",
-    sounds: "testsounddir",
-    start_code: 6
+    name: "FullTokenTest",
+    start_code: 5,
+    version: "0.1.2-rc1"
   }
   @correct_logic_result "Start: add1 11,3,28,1.75,3,4.0,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end"
   @correct_conditinal_result "start 1,1,1,1,1,1,1,end"
