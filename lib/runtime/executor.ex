@@ -631,6 +631,17 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
+  defp execute_ast(prog, {:json_encode, ctx, [_] = args}, env) do
+    {:ok, [obj], env} = process_args(prog, env, args, [])
+
+    case Poison.encode(obj) do
+      {:ok, string} ->
+        {:ok, string, env}
+      _ ->
+        error(prog, ctx, "Invalid object to json_encode #{inspect obj}")
+    end
+  end
+
   defp execute_ast(prog, {:contains, ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = process_args(prog, env, args, [])
 
