@@ -7,13 +7,14 @@ defmodule FusionDslTest do
   alias FusionDsl.Runtime.Enviornment
   alias FusionDsl.Runtime.Executor
 
-  @full_tokens_file "test/samples/full_tokens.ivr1"
-  @scopes_file "test/samples/scopes.ivr1"
-  @logical_file "test/samples/logical.ivr1"
-  @coditional_file "test/samples/conditional.ivr1"
-  @strings_file "test/samples/strings.ivr1"
-  @arrays_file "test/samples/arrays.ivr1"
-  @regex_file "test/samples/regex.ivr1"
+  @full_tokens_file "test/samples/full_tokens.fus"
+  @scopes_file "test/samples/scopes.fus"
+  @logical_file "test/samples/logical.fus"
+  @coditional_file "test/samples/conditional.fus"
+  @strings_file "test/samples/strings.fus"
+  @arrays_file "test/samples/arrays.fus"
+  @regex_file "test/samples/regex.fus"
+  @maps_file "test/samples/maps.fus"
 
   @full_tokens_first_ln 5
   @full_tokens_last_ln 53
@@ -29,6 +30,7 @@ defmodule FusionDslTest do
   @correct_strings_trues 14
   @correct_arrays_trues 15
   @correct_regex_trues 4
+  @correct_maps_trues 7
 
   test "lexer lang-id order is correct" do
     [id | t] = Lexer.get_lang_ids()
@@ -149,6 +151,24 @@ defmodule FusionDslTest do
 
     correct =
       Enum.reduce(1..@correct_regex_trues, "", fn _x, acc ->
+        "true," <> acc
+      end)
+
+    assert result == correct
+  end
+
+  test "Map operations work as expected" do
+    file_data = File.read!(@maps_file)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
+
+    {:ok, env} = Enviornment.prepare_env()
+    {:end, env} = Executor.execute(ast_data.prog, env)
+    result = env.vars["result"]
+
+    correct =
+      Enum.reduce(1..@correct_maps_trues, "", fn _x, acc ->
         "true," <> acc
       end)
 

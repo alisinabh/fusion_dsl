@@ -231,14 +231,9 @@ defmodule FusionDsl.Runtime.Executor do
   defp execute_ast(prog, {:neq, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
+
     cond do
-      is_number(left) and is_number(right) ->
-        {:ok, left != right, env}
-
-      is_binary(left) and is_binary(right) ->
-        {:ok, left != right, env}
-
-      true ->
+      is_tuple(left) or is_tuple(right) ->
         error(
           prog,
           ctx,
@@ -246,6 +241,15 @@ defmodule FusionDsl.Runtime.Executor do
             inspect(right)
           }"
         )
+
+      is_nil(left) ->
+        {:ok, not is_nil(right), env}
+
+      is_nil(right) ->
+        {:ok, not is_nil(left), env}
+
+      true ->
+        {:ok, left != right, env}
     end
   end
 
@@ -975,19 +979,11 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp norm_regex(list, acc \\ [])
+  defp execute_ast(prog, {:to_string, ctx, args}, env) do
+    {:ok, [val], env} =
+      process_args(prog, env, args, [])
 
-  defp norm_regex([a | t], acc) when is_tuple(a) do
-    norm_regex(t, [Tuple.to_list(a) | acc])
-  end
-
-  defp norm_regex([a | t], acc) when is_list(a) do
-    a = norm_regex(a, [])
-    norm_regex(t, [a | acc])
-  end
-
-  defp norm_regex([], acc) do
-    Enum.reverse(acc)
+    {:ok,to_string(val), env}
   end
 
   defp execute_ast(prog, num, env) when is_number(num) do
@@ -1029,6 +1025,21 @@ defmodule FusionDsl.Runtime.Executor do
 
   defp process_args(_, env, [], acc) do
     {:ok, Enum.reverse(acc), env}
+  end
+
+  defp norm_regex(list, acc \\ [])
+
+  defp norm_regex([a | t], acc) when is_tuple(a) do
+    norm_regex(t, [Tuple.to_list(a) | acc])
+  end
+
+  defp norm_regex([a | t], acc) when is_list(a) do
+    a = norm_regex(a, [])
+    norm_regex(t, [a | acc])
+  end
+
+  defp norm_regex([], acc) do
+    Enum.reverse(acc)
   end
 
   defp get_var(prog, var, env, ctx) when is_binary(var) do
