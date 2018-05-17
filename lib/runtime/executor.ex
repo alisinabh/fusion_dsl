@@ -1088,7 +1088,7 @@ defmodule FusionDsl.Runtime.Executor do
   defp replace_json_vars([], json, prog, env, _ctx), do: {json, env}
 
   defp replace_json_vars(variables, json, prog, env, ctx) do
-    Enum.reduce(variables, {env, json}, fn [name, var], acc ->
+    Enum.reduce(variables, {json, env}, fn [name, var], acc ->
       {json, env} = acc
 
       case get_var(prog, var, env, ctx) do
