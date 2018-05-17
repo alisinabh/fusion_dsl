@@ -86,7 +86,9 @@ defmodule FusionDsl.Processor.AstProcessor do
     :regex_match,
     :regex_replace,
     :regex_run,
-    :regex_scan
+    :regex_scan,
+    :json_decode,
+    :json_encode
   ]
 
   @doc """

@@ -603,6 +603,34 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
+  defp execute_ast(prog, {:json_decode, ctx, [_] = args}, env) do
+    {:ok, [json], env} = process_args(prog, env, args, [])
+
+    cond do
+      is_binary(json) ->
+        case Poison.decode(json) do
+          {:ok, data} ->
+            {:ok, data, env}
+
+          _ ->
+            error(
+              prog,
+              ctx,
+              "Invalid json binary for json_decode: #{inspect(json)}"
+            )
+        end
+
+      true ->
+        error(
+          prog,
+          ctx,
+          "Only binary(Strings) are accepted in json_decode, not #{
+            inspect(json)
+          }"
+        )
+    end
+  end
+
   defp execute_ast(prog, {:contains, ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = process_args(prog, env, args, [])
 
@@ -949,30 +977,6 @@ defmodule FusionDsl.Runtime.Executor do
 
   defp norm_regex([], acc) do
     Enum.reverse(acc)
-  end
-
-  defp execute_ast(prog, {:play, ctx, args}, env) do
-    {:ok, [file_name | t], env} = process_args(prog, env, args, [])
-
-    escape_digits =
-      case t do
-        [] ->
-          "0123456789"
-
-        [ed] when is_binary(ed) ->
-          ed
-
-        _ ->
-          error(prog, ctx, "Unknown parametes given to play: #{inspect(args)}")
-      end
-
-    cond do
-      is_binary(file_name) ->
-        {:ok, _result, _env} = env.mod.play(prog, env, file_name, escape_digits)
-
-      true ->
-        error(prog, ctx, "play is not supported for #{inspect(file_name)}")
-    end
   end
 
   defp execute_ast(prog, num, env) when is_number(num) do
