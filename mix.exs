@@ -5,7 +5,8 @@ defmodule FusionDsl.MixProject do
     [
       app: :fusion_dsl,
       version: "0.1.0",
-      elixir: "~> 1.6",
+      elixir: "~> 1.5",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -25,4 +26,7 @@ defmodule FusionDsl.MixProject do
       {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/integration"]
+  defp elixirc_paths(_), do: ["lib"]
 end

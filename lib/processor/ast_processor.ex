@@ -91,6 +91,8 @@ defmodule FusionDsl.Processor.AstProcessor do
     :json_encode
   ]
 
+  @packages Application.get_env(:fusion_dsl, :packages, [])
+
   @doc """
   Generates an ast array of program
 
@@ -427,6 +429,42 @@ defmodule FusionDsl.Processor.AstProcessor do
 
       {:ok, {unquote(fun), [ln: state.ln], asts}, state}
     end
+  end)
+
+  Enum.each(@packages, fn {module, opts} ->
+    pack_ids = apply(module, :list_functions, [])
+
+    pack_name =
+      case opts[:as] do
+        nil ->
+          module
+          |> to_string
+          |> String.split(".")
+          |> List.last()
+
+        name ->
+          name
+      end
+
+    Enum.each(pack_ids, fn atom_id ->
+      id = to_string(atom_id)
+
+      defp gen_ast(
+             ["(", <<unquote(pack_name), ":", unquote(id)>> | args],
+             t_lines,
+             state
+           ) do
+        {:ok, asts, state} =
+          args
+          |> get_scope_tokens([], 0)
+          |> split_args([], [], 0)
+          |> gen_args_ast(t_lines, state, [])
+
+        {:ok,
+         {{unquote(module), unquote(atom_id)},
+          [ln: state.ln, package: unquote(module)], asts}, state}
+      end
+    end)
   end)
 
   defp gen_ast(["(" | args], t_lines, state) do

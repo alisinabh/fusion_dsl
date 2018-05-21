@@ -80,6 +80,8 @@ defmodule FusionDsl.Processor.Lexer do
   @r_fnclosoure ~r/\A[ \t]+\(/
   @r_eol ~r/\n/
 
+  @packages Application.get_env(:fusion_dsl, :packages, [])
+
   @doc """
   Tokenizes an IVRONE Code
 
@@ -138,10 +140,7 @@ defmodule FusionDsl.Processor.Lexer do
   defp normalize(code) do
     code = String.replace(code, "\r\n", "\n")
 
-    #
     if String.ends_with?(code, "\n") do
-      # {:ok, env} = FusionDsl.Runtime.Enviornment.prepare_env()
-      # FusionDsl.Runtime.Executor.execute(ast_data.prog, env)
       code
     else
       code <> "\n"
@@ -196,6 +195,64 @@ defmodule FusionDsl.Processor.Lexer do
           do_tokenize(inject_ending(rest), [unquote(id), "(" | acc])
       end
     end
+  end)
+
+  Enum.each(@packages, fn {module, opts} ->
+    pack_ids = apply(module, :list_functions, [])
+
+    pack_name =
+      case opts[:as] do
+        nil ->
+          module
+          |> to_string
+          |> String.split(".")
+          |> List.last()
+
+        name ->
+          name
+      end
+
+    Enum.each(pack_ids, fn atom_id ->
+      id = to_string(atom_id)
+
+      defp do_tokenize(
+             <<unquote(pack_name), ":", unquote(id), "(", rest::binary>>,
+             acc
+           ) do
+        cond do
+          Regex.match?(@r_fnclosoure, rest) ->
+            do_tokenize(rest, [
+              ":#{unquote(pack_name)}:#{unquote(id)}",
+              "(" | acc
+            ])
+
+          true ->
+            do_tokenize(inject_ending(rest), [
+              "#{unquote(pack_name)}:#{unquote(id)}",
+              "(" | acc
+            ])
+        end
+      end
+
+      defp do_tokenize(
+             <<unquote(pack_name), ":", unquote(id), rest::binary>>,
+             acc
+           ) do
+        cond do
+          Regex.match?(@r_fnclosoure, rest) ->
+            do_tokenize(rest, [
+              "#{unquote(pack_name)}:#{unquote(id)}",
+              "(" | acc
+            ])
+
+          true ->
+            do_tokenize(rest, [
+              "#{unquote(pack_name)}:#{unquote(id)}",
+              "(" | acc
+            ])
+        end
+      end
+    end)
   end)
 
   # Handle numbers

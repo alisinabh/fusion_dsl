@@ -3,7 +3,6 @@
 use Mix.Config
 
 config :fusion_dsl,
-  base_sound_path: "/var/lib/asterisk/sounds/fa/",
   jump_start_throttle: 200,
   jump_throttle_every: 20,
   jump_throttle_time_ms: 50
@@ -33,4 +32,4 @@ config :fusion_dsl,
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
 #
-#     import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

@@ -74,7 +74,12 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:and, ctx, args}, env) do
+  @doc """
+  Executes a single ast and returns `{:ok, result, env}`
+  """
+  def execute_ast(prog, ast, env)
+
+  def execute_ast(prog, {:and, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -90,7 +95,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:or, ctx, args}, env) do
+  def execute_ast(prog, {:or, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -106,7 +111,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:not, ctx, args}, env) do
+  def execute_ast(prog, {:not, ctx, args}, env) do
     {:ok, [value], env} = process_args(prog, env, args, [])
 
     cond do
@@ -118,7 +123,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:add, ctx, args}, env) do
+  def execute_ast(prog, {:add, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -140,7 +145,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:sub, ctx, args}, env) do
+  def execute_ast(prog, {:sub, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -156,7 +161,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:mult, ctx, args}, env) do
+  def execute_ast(prog, {:mult, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -172,7 +177,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:div, ctx, args}, env) do
+  def execute_ast(prog, {:div, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -188,7 +193,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:mod, ctx, args}, env) do
+  def execute_ast(prog, {:mod, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -204,7 +209,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:eq, ctx, args}, env) do
+  def execute_ast(prog, {:eq, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -228,9 +233,8 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:neq, ctx, args}, env) do
+  def execute_ast(prog, {:neq, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
-
 
     cond do
       is_tuple(left) or is_tuple(right) ->
@@ -253,7 +257,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:lte, ctx, args}, env) do
+  def execute_ast(prog, {:lte, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -271,7 +275,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:gte, ctx, args}, env) do
+  def execute_ast(prog, {:gte, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -289,7 +293,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:lt, ctx, args}, env) do
+  def execute_ast(prog, {:lt, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -307,7 +311,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:gt, ctx, args}, env) do
+  def execute_ast(prog, {:gt, ctx, args}, env) do
     {:ok, [left, right], env} = process_args(prog, env, args, [])
 
     cond do
@@ -325,7 +329,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:set, ctx, [{:var, _, [var]}, right]}, env) do
+  def execute_ast(prog, {:set, ctx, [{:var, _, [var]}, right]}, env) do
     if String.starts_with?(var, "_") do
       case get_var(prog, var, env, ctx) do
         {:ok, _, _} ->
@@ -359,11 +363,11 @@ defmodule FusionDsl.Runtime.Executor do
     {:ok, val, env}
   end
 
-  defp execute_ast(prog, {:var, ctx, [var]}, env) do
+  def execute_ast(prog, {:var, ctx, [var]}, env) do
     get_var(prog, var, env, ctx)
   end
 
-  defp execute_ast(prog, {:rand, ctx, args}, env) do
+  def execute_ast(prog, {:rand, ctx, args}, env) do
     {:ok, [lower, upper], env} = process_args(prog, env, args, [])
 
     cond do
@@ -379,7 +383,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:to_number, ctx, args}, env) do
+  def execute_ast(prog, {:to_number, ctx, args}, env) do
     {:ok, [binary], env} = process_args(prog, env, args, [])
 
     cond do
@@ -407,7 +411,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:int, ctx, [_] = args}, env) do
+  def execute_ast(prog, {:int, ctx, [_] = args}, env) do
     {:ok, [num], env} = process_args(prog, env, args, [])
 
     cond do
@@ -423,7 +427,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:round, ctx, [_] = args}, env) do
+  def execute_ast(prog, {:round, ctx, [_] = args}, env) do
     {:ok, [num], env} = process_args(prog, env, args, [])
 
     cond do
@@ -439,25 +443,25 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:create_array, ctx, args}, env) do
+  def execute_ast(prog, {:create_array, ctx, args}, env) do
     {:ok, arr_elems, env} = process_args(prog, env, args, [])
 
     {:ok, arr_elems, env}
   end
 
-  defp execute_ast(prog, {:noop, ctx, _}, env) do
+  def execute_ast(prog, {:noop, ctx, _}, env) do
     {:ok, nil, env}
   end
 
-  defp execute_ast(prog, {:jump, ctx, [jump_amount]}, env) do
+  def execute_ast(prog, {:jump, ctx, [jump_amount]}, env) do
     {:jump, jump_amount, env}
   end
 
-  defp execute_ast(prog, {:jump_to, ctx, [line_number, skip, opt]}, env) do
+  def execute_ast(prog, {:jump_to, ctx, [line_number, skip, opt]}, env) do
     {:jump_to, {line_number, skip, opt}, env}
   end
 
-  defp execute_ast(prog, {:jump_not, ctx, args}, env) do
+  def execute_ast(prog, {:jump_not, ctx, args}, env) do
     {:ok, [condition, jump_amount], env} = process_args(prog, env, args, [])
 
     cond do
@@ -479,7 +483,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:goto, ctx, [proc]}, env) when is_atom(proc) do
+  def execute_ast(prog, {:goto, ctx, [proc]}, env) when is_atom(proc) do
     case prog.procedures[proc] do
       proc_asts when is_list(proc_asts) ->
         :timer.sleep(50)
@@ -495,7 +499,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:elem, ctx, [_, _] = args}, env) do
+  def execute_ast(prog, {:elem, ctx, [_, _] = args}, env) do
     {:ok, [array, index], env} = process_args(prog, env, args, [])
 
     cond do
@@ -511,7 +515,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:insert, ctx, [_, _, _] = args}, env) do
+  def execute_ast(prog, {:insert, ctx, [_, _, _] = args}, env) do
     {:ok, [array, index, value], env} = process_args(prog, env, args, [])
 
     cond do
@@ -528,11 +532,11 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:return, _ctx, _}, env) do
+  def execute_ast(prog, {:return, _ctx, _}, env) do
     {:end, env}
   end
 
-  defp execute_ast(prog, {:wait, ctx, [_] = args}, env) do
+  def execute_ast(prog, {:wait, ctx, [_] = args}, env) do
     {:ok, [amount], env} = process_args(prog, env, args, [])
 
     cond do
@@ -550,7 +554,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:remove, ctx, [_, _] = args}, env) do
+  def execute_ast(prog, {:remove, ctx, [_, _] = args}, env) do
     {:ok, [value, index], env} = process_args(prog, env, args, [])
 
     cond do
@@ -575,7 +579,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:dispose, ctx, [{:var, _, [name]}] = args}, env) do
+  def execute_ast(prog, {:dispose, ctx, [{:var, _, [name]}] = args}, env) do
     {:ok, [value], env} = process_args(prog, env, args, [])
 
     cond do
@@ -591,7 +595,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:json, ctx, [_] = args}, env) do
+  def execute_ast(prog, {:json, ctx, [_] = args}, env) do
     {:ok, [json], env} = process_args(prog, env, args, [])
 
     variables = Regex.scan(@r_json_vars, json)
@@ -607,7 +611,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:json_decode, ctx, [_] = args}, env) do
+  def execute_ast(prog, {:json_decode, ctx, [_] = args}, env) do
     {:ok, [json], env} = process_args(prog, env, args, [])
 
     cond do
@@ -635,18 +639,19 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:json_encode, ctx, [_] = args}, env) do
+  def execute_ast(prog, {:json_encode, ctx, [_] = args}, env) do
     {:ok, [obj], env} = process_args(prog, env, args, [])
 
     case Poison.encode(obj) do
       {:ok, string} ->
         {:ok, string, env}
+
       _ ->
-        error(prog, ctx, "Invalid object to json_encode #{inspect obj}")
+        error(prog, ctx, "Invalid object to json_encode #{inspect(obj)}")
     end
   end
 
-  defp execute_ast(prog, {:contains, ctx, [_, _] = args}, env) do
+  def execute_ast(prog, {:contains, ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = process_args(prog, env, args, [])
 
     cond do
@@ -667,7 +672,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:index_of, ctx, [_, _] = args}, env) do
+  def execute_ast(prog, {:index_of, ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = process_args(prog, env, args, [])
 
     cond do
@@ -697,7 +702,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:last_index_of, ctx, [_, _] = args}, env) do
+  def execute_ast(prog, {:last_index_of, ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = process_args(prog, env, args, [])
 
     cond do
@@ -737,7 +742,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:starts_with, ctx, [_, _] = args}, env) do
+  def execute_ast(prog, {:starts_with, ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = process_args(prog, env, args, [])
 
     cond do
@@ -764,7 +769,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:ends_with, ctx, [_, _] = args}, env) do
+  def execute_ast(prog, {:ends_with, ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = process_args(prog, env, args, [])
 
     cond do
@@ -796,7 +801,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:replace, ctx, [_, _, _] = args}, env) do
+  def execute_ast(prog, {:replace, ctx, [_, _, _] = args}, env) do
     {:ok, [source, element, replacement], env} =
       process_args(prog, env, args, [])
 
@@ -820,7 +825,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:reverse, ctx, [_] = args}, env) do
+  def execute_ast(prog, {:reverse, ctx, [_] = args}, env) do
     {:ok, [source], env} = process_args(prog, env, args, [])
 
     cond do
@@ -841,7 +846,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:length, ctx, [_] = args}, env) do
+  def execute_ast(prog, {:length, ctx, [_] = args}, env) do
     {:ok, [source], env} = process_args(prog, env, args, [])
 
     cond do
@@ -862,7 +867,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:slice, ctx, [_, _ | _] = args}, env) do
+  def execute_ast(prog, {:slice, ctx, [_, _ | _] = args}, env) do
     {:ok, [source, start | count] = f_args, env} =
       process_args(prog, env, args, [])
 
@@ -893,7 +898,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:regex, ctx, args}, env) do
+  def execute_ast(prog, {:regex, ctx, args}, env) do
     {:ok, [regex_str | opts] = f_args, env} = process_args(prog, env, args, [])
 
     opt =
@@ -915,7 +920,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:regex_run, ctx, args}, env) do
+  def execute_ast(prog, {:regex_run, ctx, args}, env) do
     {:ok, [%Regex{} = regex, string] = f_args, env} =
       process_args(prog, env, args, [])
 
@@ -928,7 +933,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:regex_match, ctx, args}, env) do
+  def execute_ast(prog, {:regex_match, ctx, args}, env) do
     {:ok, [%Regex{} = regex, string] = f_args, env} =
       process_args(prog, env, args, [])
 
@@ -945,7 +950,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:regex_replace, ctx, args}, env) do
+  def execute_ast(prog, {:regex_replace, ctx, args}, env) do
     {:ok, [%Regex{} = regex, string, replacement] = f_args, env} =
       process_args(prog, env, args, [])
 
@@ -962,7 +967,7 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:regex_scan, ctx, args}, env) do
+  def execute_ast(prog, {:regex_scan, ctx, args}, env) do
     {:ok, [%Regex{} = regex, string] = f_args, env} =
       process_args(prog, env, args, [])
 
@@ -979,43 +984,52 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  defp execute_ast(prog, {:to_string, ctx, args}, env) do
-    {:ok, [val], env} =
-      process_args(prog, env, args, [])
+  def execute_ast(prog, {:to_string, ctx, args}, env) do
+    {:ok, [val], env} = process_args(prog, env, args, [])
 
-    {:ok,to_string(val), env}
+    {:ok, to_string(val), env}
   end
 
-  defp execute_ast(prog, num, env) when is_number(num) do
+  def execute_ast(prog, num, env) when is_number(num) do
     {:ok, num, env}
   end
 
-  defp execute_ast(prog, string, env) when is_binary(string) do
+  def execute_ast(prog, string, env) when is_binary(string) do
     {:ok, string, env}
   end
 
-  defp execute_ast(prog, bool, env) when is_boolean(bool) do
+  def execute_ast(prog, bool, env) when is_boolean(bool) do
     {:ok, bool, env}
   end
 
-  defp execute_ast(prog, list, env) when is_list(list) do
+  def execute_ast(prog, list, env) when is_list(list) do
     {:ok, list, env}
   end
 
-  defp execute_ast(prog, map, env) when is_map(map) do
+  def execute_ast(prog, map, env) when is_map(map) do
     {:ok, map, env}
   end
 
-  defp execute_ast(prog, v, env) when is_nil(v) do
+  def execute_ast(prog, v, env) when is_nil(v) do
     {:ok, nil, env}
   end
 
-  defp execute_ast(prog, %Regex{} = v, env) do
+  def execute_ast(prog, %Regex{} = v, env) do
     {:ok, v, env}
   end
 
-  defp execute_ast(prog, {_, ctx, _} = unknown, env) do
-    error(prog, ctx, "Unknown type #{inspect(unknown)}")
+  def execute_ast(prog, {{module, func}, ctx, args}, env) do
+    case apply(module, :execute_ast, [env, {func, ctx, args}]) do
+      {:ok, output, env} ->
+        {:ok, output, env}
+
+      {:error, message} ->
+        error(prog, ctx, message)
+    end
+  end
+
+  def execute_ast(prog, {_, ctx, _} = ast, env) do
+    error(prog, ctx, "Unknown type #{inspect(ast)}")
   end
 
   defp process_args(prog, env, [arg | t], acc) do
@@ -1096,7 +1110,7 @@ defmodule FusionDsl.Runtime.Executor do
   end
 
   defp error(prog, ctx, msg) do
-    raise("Line: #{ctx[:ln]}: #{msg}")
+    raise("Kernel error\n Line: #{ctx[:ln]}: #{msg}")
   end
 
   defp replace_in_list(source, pattern, replacement),

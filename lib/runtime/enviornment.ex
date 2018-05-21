@@ -9,7 +9,9 @@ defmodule FusionDsl.Runtime.Enviornment do
             agi: nil,
             last_user_action: DateTime.utc_now(),
             cur_proc: [:main],
-            jump_c: 0
+            jump_c: 0,
+            assigns: %{},
+            prog: nil
 
   alias FusionDsl.Processor.Program
 
@@ -20,7 +22,7 @@ defmodule FusionDsl.Runtime.Enviornment do
   Prepares enviornments data and returns the data
   """
   # TODO: get call info or test info
-  def prepare_env do
-    {:ok, %__MODULE__{}}
+  def prepare_env(prog) do
+    {:ok, %__MODULE__{prog: prog}}
   end
 end

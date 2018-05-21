@@ -87,7 +87,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
+    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(ast_data.prog, env)
     assert env.vars["result"] == @correct_logic_result
   end
@@ -98,7 +98,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
+    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(ast_data.prog, env)
     assert env.vars["result"] == @correct_conditinal_result
   end
@@ -109,7 +109,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
+    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(ast_data.prog, env)
     result = env.vars["result"]
 
@@ -127,7 +127,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
+    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(ast_data.prog, env)
     result = env.vars["result"]
 
@@ -145,7 +145,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
+    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(ast_data.prog, env)
     result = env.vars["result"]
 
@@ -163,7 +163,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
+    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(ast_data.prog, env)
     result = env.vars["result"]
 
