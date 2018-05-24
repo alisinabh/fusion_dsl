@@ -16,7 +16,7 @@ defmodule FusionDslTest.IntegrationTest do
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
     {:ok, env} = Enviornment.prepare_env(ast_data.prog)
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
     correct =

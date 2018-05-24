@@ -268,7 +268,9 @@ defmodule FusionDsl.Processor.AstProcessor do
           |> Map.put(:end_asts, [{:noop, nil} | state.end_asts])
           |> Map.put(:clauses, [{:if, [ln: state.ln]} | state.clauses])
 
-        {:ok, {:jump_not, [ln: state.ln], [if_cond_ast, skip_amount]}, state}
+        {:ok,
+         {{FusionDsl.Kernel, :jump_not}, [ln: state.ln],
+          [if_cond_ast, skip_amount]}, state}
 
       :not_found ->
         raise("'end' for if not found!")
@@ -307,7 +309,9 @@ defmodule FusionDsl.Processor.AstProcessor do
           ])
           |> Map.put(:clauses, [{:loop, [state.ln, 0, opt]} | state.clauses])
 
-        {:ok, {:jump_not, [ln: state.ln], [while_cond_ast, skip_amount]}, state}
+        {:ok,
+         {{FusionDsl.Kernel, :jump_not}, [ln: state.ln],
+          [while_cond_ast, skip_amount]}, state}
 
       :not_found ->
         raise("'end' for while not found!")
@@ -361,7 +365,7 @@ defmodule FusionDsl.Processor.AstProcessor do
 
   # Get env variables
   defp gen_ast([<<"@", var::binary>> | _t], _t_lines, state) do
-    {:ok, {:get_system, [ln: state.ln], [var]}, state}
+    {:ok, {{FusionDsl.Kernel, :get_system}, [ln: state.ln], [var]}, state}
   end
 
   # Goto operation
@@ -382,8 +386,8 @@ defmodule FusionDsl.Processor.AstProcessor do
   # Json objects
   defp gen_ast([<<"%'", str::binary>> | _t], _t_lines, state) do
     {:ok,
-     {:json, [ln: state.ln], [String.slice(str, 0, String.length(str) - 1)]},
-     state}
+     {{FusionDsl.Kernel, :json_decode}, [ln: state.ln],
+      [String.slice(str, 0, String.length(str) - 1)]}, state}
   end
 
   # Numbers
@@ -404,10 +408,12 @@ defmodule FusionDsl.Processor.AstProcessor do
       |> split_args([], [], 0)
       |> gen_args_ast(t_lines, state, [])
 
-    {:ok, {:create_array, [ln: state.ln], asts}, state}
+    {:ok, {{FusionDsl.Kernel, :create_array}, [ln: state.ln], asts}, state}
   end
 
   Enum.each(@operators, fn op ->
+    fun = @operator_names[op]
+
     defp gen_ast(["(", "/#{unquote(op)}" | args], t_lines, state) do
       {:ok, asts, state} =
         args
@@ -415,7 +421,7 @@ defmodule FusionDsl.Processor.AstProcessor do
         |> split_args([], [], 0)
         |> gen_args_ast(t_lines, state, [])
 
-      {:ok, {@operator_names[unquote(op)], [ln: state.ln], asts}, state}
+      {:ok, {{FusionDsl.Kernel, unquote(fun)}, [ln: state.ln], asts}, state}
     end
   end)
 
@@ -427,7 +433,7 @@ defmodule FusionDsl.Processor.AstProcessor do
         |> split_args([], [], 0)
         |> gen_args_ast(t_lines, state, [])
 
-      {:ok, {unquote(fun), [ln: state.ln], asts}, state}
+      {:ok, {{FusionDsl.Kernel, unquote(fun)}, [ln: state.ln], asts}, state}
     end
   end)
 

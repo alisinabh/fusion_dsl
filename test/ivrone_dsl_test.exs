@@ -1,6 +1,6 @@
 defmodule FusionDslTest do
   use ExUnit.Case
-  doctest FusionDsl
+  doctest FusionDsl.Helpers.FunctionNames
 
   alias FusionDsl.Processor.Lexer
   alias FusionDsl.Processor.AstProcessor
@@ -88,7 +88,7 @@ defmodule FusionDslTest do
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
     {:ok, env} = Enviornment.prepare_env(ast_data.prog)
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:end, env} = Executor.execute(env)
     assert env.vars["result"] == @correct_logic_result
   end
 
@@ -99,7 +99,7 @@ defmodule FusionDslTest do
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
     {:ok, env} = Enviornment.prepare_env(ast_data.prog)
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:end, env} = Executor.execute(env)
     assert env.vars["result"] == @correct_conditinal_result
   end
 
@@ -110,7 +110,7 @@ defmodule FusionDslTest do
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
     {:ok, env} = Enviornment.prepare_env(ast_data.prog)
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
     correct =
@@ -128,7 +128,7 @@ defmodule FusionDslTest do
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
     {:ok, env} = Enviornment.prepare_env(ast_data.prog)
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
     correct =
@@ -146,7 +146,7 @@ defmodule FusionDslTest do
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
     {:ok, env} = Enviornment.prepare_env(ast_data.prog)
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
     correct =
@@ -164,7 +164,7 @@ defmodule FusionDslTest do
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
     {:ok, env} = Enviornment.prepare_env(ast_data.prog)
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
     correct =

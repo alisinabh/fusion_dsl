@@ -18,8 +18,6 @@ defmodule FusionDsl.Impl do
     end
   end
 
-  @callback execute_ast(env, Tuple.t()) ::
-              {:ok, term, env} | {:error, String.t()}
   @callback list_functions() :: List.t()
 
   @doc "Puts a key in env assigns"
@@ -53,20 +51,63 @@ defmodule FusionDsl.Impl do
   end
 
   def prep_arg(arg, env) do
-    Executor.execute_ast(env.prog, arg, env)
+    case Executor.execute_ast(arg, env) do
+      {:ok, result, env} ->
+        {:ok, result, env}
+
+      {:error, msg} ->
+        {:error, "argument execute resulted in an error: #{msg}"}
+    end
   end
 
   @doc """
-  Raises an exception and stops the flow of script
+  Returns value of a variable in env
   """
-  def error(_env, ctx, message) do
-    raise("#{ctx[:package]} error\n Line: #{ctx[:ln]}\n#{message}")
+  def get_var(prog, var, env) when is_binary(var) do
+    case do_get_var(prog, nil, String.split(var, "."), env) do
+      {:ok, acc, env} ->
+        {:ok, acc, env}
+
+      {:error, :not_initialized} ->
+        {:error, :not_initialized}
+    end
   end
 
+  # Runs prep_arg on each argument in the list and returns the 
+  # result in same order
   defp do_prep_args([h | t], env, acc) do
-    {:ok, res, env} = prep_arg(h, env)
-    do_prep_args(t, env, [res | acc])
+    case prep_arg(h, env) do
+      {:ok, res, env} ->
+        do_prep_args(t, env, [res | acc])
+
+      {:error, msg} ->
+        {:error, msg}
+    end
   end
 
   defp do_prep_args([], env, acc), do: {:ok, Enum.reverse(acc), env}
+
+  defp do_get_var(prog, nil, [var | t], env) do
+    case Map.fetch(env.vars, var) do
+      :error ->
+        {:error, :not_initialized}
+
+      {:ok, v} ->
+        do_get_var(prog, v, t, env)
+    end
+  end
+
+  defp do_get_var(prog, acc, [var | t], env) when is_map(acc) do
+    case Map.fetch(acc, var) do
+      :error ->
+        {:error, :not_initialized}
+
+      {:ok, v} ->
+        do_get_var(prog, v, t, env)
+    end
+  end
+
+  defp do_get_var(prog, acc, [], env) do
+    {:ok, acc, env}
+  end
 end

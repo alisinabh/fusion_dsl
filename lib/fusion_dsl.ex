@@ -3,7 +3,7 @@ defmodule FusionDsl do
   Documentation for FusionDsl.
   """
 
-  def test_ast_begin(filename \\ "test/samples/integration.fus") do
+  def test_ast_begin(filename \\ "test/samples/logical.fus") do
     {:ok, conf, tokens} =
       FusionDsl.Processor.Lexer.tokenize(File.read!(filename))
 
@@ -11,6 +11,6 @@ defmodule FusionDsl do
     {:ok, ast_data} = FusionDsl.Processor.AstProcessor.generate_ast(conf, lines)
 
     {:ok, env} = FusionDsl.Runtime.Enviornment.prepare_env(ast_data.prog)
-    FusionDsl.Runtime.Executor.execute(ast_data.prog, env)
+    FusionDsl.Runtime.Executor.execute(env)
   end
 end
