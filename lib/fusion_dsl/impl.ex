@@ -11,7 +11,7 @@ defmodule FusionDsl.Impl do
   @type ast :: {atom(), Keyword.t(), List.t()}
   @type prog :: %FusionDsl.Processor.Program{}
 
-  defmacro __using__(opts) do
+  defmacro __using__(_opts) do
     quote do
       import FusionDsl.Impl
       @behaviour FusionDsl.Impl

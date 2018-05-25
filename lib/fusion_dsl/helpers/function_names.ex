@@ -34,7 +34,7 @@ defmodule FusionDsl.Helpers.FunctionNames do
       iex> FusionDsl.Helpers.FunctionNames.normalize!("test")
       "test"
   """
-  def normalize(word)
+  def normalize!(word)
 
   Enum.each(@invalid_keywords, fn bin_word ->
     word = String.to_atom(bin_word)
@@ -65,4 +65,15 @@ defmodule FusionDsl.Helpers.FunctionNames do
   end)
 
   def normalize!(fn_name), do: fn_name
+
+  @doc """
+  Sorts function names (list of atoms e.g: `[:f1, :fn2, :fun3]`) 
+  from longest to shortest (like: `[:fun3, :fn2, :f1]`)
+  """
+  def sort_names(names) when is_list(names) do
+    Enum.sort(
+      names,
+      &(String.length(to_string(&1)) >= String.length(to_string(&2)))
+    )
+  end
 end

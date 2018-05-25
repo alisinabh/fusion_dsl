@@ -1,6 +1,7 @@
 FORMAT: FUSION1
 NAME: test integration
 VERSION: v0.1
+IMPORT: SampleImpl
 
 def main:
   $var = 1
@@ -8,7 +9,7 @@ def main:
 
   $add = rand 1, 500
 
-  $dat = SampleImpl:test($map.number, $add)
+  $dat = test($map.number, $add)
 
 
   $result = to_string($dat == ($add + $var)) + ','

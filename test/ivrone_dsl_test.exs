@@ -19,12 +19,27 @@ defmodule FusionDslTest do
   @full_tokens_first_ln 5
   @full_tokens_last_ln 53
 
-  @correct_config %{
-    format: "FUSION1",
-    name: "FullTokenTest",
-    start_code: 5,
-    version: "0.1.2-rc1"
+  @correct_config %FusionDsl.Processor.CompileConfig{
+    clauses: [],
+    end_asts: [],
+    headers: %{
+      format: "FUSION1",
+      name: "FullTokenTest",
+      version: "0.1.2-rc1"
+    },
+    imports: %{"Kernel" => true},
+    ln: 0,
+    proc: nil,
+    prog: %FusionDsl.Processor.Program{
+      config: [],
+      fusion_version: nil,
+      name: nil,
+      procedures: %{},
+      version: nil
+    },
+    start_code: 5
   }
+
   @correct_logic_result "Start: add1 11,3,28,1.75,3,4.0,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end"
   @correct_conditinal_result "start 1,1,1,1,1,1,1,end"
   @correct_strings_trues 14

@@ -3,41 +3,14 @@ defmodule FusionDsl.Processor.Lexer do
   Tokenizer and normalizer for IVRONE DSL
   """
 
+  alias FusionDsl.Processor.CompileConfig
+
   @lang_ids [
-    "last_index_of",
-    "regex_replace",
-    "starts_with",
-    "json_encode",
-    "json_decode",
-    "regex_match",
-    "regex_scan",
-    "to_number",
-    "to_string",
-    "regex_run",
-    "ends_with",
-    "ends_with",
     "continue",
-    "contains",
-    "index_of",
-    "dispose",
-    "replace",
-    "reverse",
-    "remove",
-    "insert",
     "return",
-    "length",
     "break",
     "while",
-    "slice",
-    "round",
-    "regex",
-    "wait",
-    "rand",
-    "elem",
     "else",
-    "for",
-    "not",
-    "int",
     "end",
     "if"
   ]
@@ -80,7 +53,9 @@ defmodule FusionDsl.Processor.Lexer do
   @r_fnclosoure ~r/\A[ \t]+\(/
   @r_eol ~r/\n/
 
-  @packages Application.get_env(:fusion_dsl, :packages, [])
+  @packages FusionDsl.get_packages()
+
+  defguard is_fn_complete(c) when c in [32, 9, 10, 41]
 
   @doc """
   Tokenizes an IVRONE Code
@@ -94,9 +69,9 @@ defmodule FusionDsl.Processor.Lexer do
   @spec tokenize(String.t()) :: {:ok, Map.t(), List.t()} | {:error, String.t()}
   def tokenize(raw_code) do
     raw_code = normalize(raw_code)
-    {:ok, headers, code} = tokenize_headers(raw_code, %{}, 1)
-    {:ok, tokens} = do_tokenize(code, [])
-    {:ok, headers, tokens}
+    {:ok, config, code} = tokenize_headers(raw_code, CompileConfig.init(), 1)
+    {:ok, config, tokens} = do_tokenize(code, [], config)
+    {:ok, config, tokens}
   end
 
   @doc """
@@ -148,19 +123,25 @@ defmodule FusionDsl.Processor.Lexer do
   end
 
   # Headers finished
-  defp tokenize_headers(<<"\n", code::binary>>, acc, ln) do
-    {:ok, Map.put(acc, :start_code, ln + 1), code}
+  defp tokenize_headers(<<"\n", code::binary>>, config, ln) do
+    # {:ok, Map.put(acc, :start_code, ln + 1), code}
+    {:ok, CompileConfig.set_start_code(config, ln + 1), code}
   end
 
   # Headers process
-  defp tokenize_headers(code, acc, ln) do
+  defp tokenize_headers(code, config, ln) do
     case Regex.run(@r_header, code) do
       [full_header, name, value] ->
         code = String.slice(code, String.length(full_header)..-1)
 
+        key =
+          name
+          |> String.downcase()
+          |> String.to_atom()
+
         tokenize_headers(
           code,
-          Map.put(acc, String.to_atom(String.downcase(name)), value),
+          CompileConfig.process_header(config, key, value),
           ln + 1
         )
 
@@ -170,29 +151,32 @@ defmodule FusionDsl.Processor.Lexer do
   end
 
   # Tokenize finished!
-  defp do_tokenize(<<>>, acc) do
-    {:ok, Enum.reverse(acc)}
+  defp do_tokenize(<<>>, acc, config) do
+    {:ok, config, Enum.reverse(acc)}
   end
 
   # Handle Lang identifires
   Enum.each(@lang_ids, fn id ->
-    defp do_tokenize(<<unquote(id), "(", rest::binary>>, acc) do
+    defp do_tokenize(<<unquote(id), "(", rest::binary>>, acc, config) do
       cond do
         Regex.match?(@r_fnclosoure, rest) ->
-          do_tokenize(rest, [unquote(id) | acc])
+          do_tokenize(rest, [unquote(id) | acc], config)
 
         true ->
-          do_tokenize(rest, [unquote(id), "(" | acc])
+          do_tokenize(rest, [unquote(id), "(" | acc], config)
       end
     end
 
-    defp do_tokenize(<<unquote(id), rest::binary>>, acc) do
+    defp do_tokenize(<<unquote(id), c::utf8, rest::binary>>, acc, config)
+         when is_fn_complete(c) do
+      rest = <<c>> <> rest
+
       cond do
         Regex.match?(@r_fnclosoure, rest) ->
-          do_tokenize(rest, [unquote(id) | acc])
+          do_tokenize(rest, [unquote(id) | acc], config)
 
         true ->
-          do_tokenize(inject_ending(rest), [unquote(id), "(" | acc])
+          do_tokenize(inject_ending(rest), [unquote(id), "(" | acc], config)
       end
     end
   end)
@@ -215,41 +199,121 @@ defmodule FusionDsl.Processor.Lexer do
     Enum.each(pack_ids, fn atom_id ->
       id = to_string(atom_id)
 
+      # imported function with scope
       defp do_tokenize(
-             <<unquote(pack_name), ":", unquote(id), "(", rest::binary>>,
-             acc
+             <<unquote(id), "(", rest::binary>>,
+             acc,
+             %{imports: %{unquote(pack_name) => true}} = config
            ) do
         cond do
           Regex.match?(@r_fnclosoure, rest) ->
-            do_tokenize(rest, [
-              ":#{unquote(pack_name)}:#{unquote(id)}",
-              "(" | acc
-            ])
+            do_tokenize(
+              rest,
+              [
+                "#{unquote(pack_name)}:#{unquote(id)}" | acc
+              ],
+              config
+            )
 
           true ->
-            do_tokenize(inject_ending(rest), [
-              "#{unquote(pack_name)}:#{unquote(id)}",
-              "(" | acc
-            ])
+            do_tokenize(
+              inject_ending(rest),
+              [
+                "#{unquote(pack_name)}:#{unquote(id)}",
+                "(" | acc
+              ],
+              config
+            )
         end
       end
 
+      # imported function WITHOUT scope
       defp do_tokenize(
-             <<unquote(pack_name), ":", unquote(id), rest::binary>>,
-             acc
+             <<unquote(id), c::utf8, rest::binary>>,
+             acc,
+             %{imports: %{unquote(pack_name) => true}} = config
+           )
+           when is_fn_complete(c) do
+        rest = <<c>> <> rest
+
+        cond do
+          Regex.match?(@r_fnclosoure, rest) ->
+            do_tokenize(
+              rest,
+              [
+                "#{unquote(pack_name)}:#{unquote(id)}" | acc
+              ],
+              config
+            )
+
+          true ->
+            do_tokenize(
+              inject_ending(rest),
+              [
+                "#{unquote(pack_name)}:#{unquote(id)}",
+                "(" | acc
+              ],
+              config
+            )
+        end
+      end
+
+      # NON-imported function with scope
+      defp do_tokenize(
+             <<unquote(pack_name), ":", unquote(id), "(", rest::binary>>,
+             acc,
+             config
            ) do
         cond do
           Regex.match?(@r_fnclosoure, rest) ->
-            do_tokenize(rest, [
-              "#{unquote(pack_name)}:#{unquote(id)}",
-              "(" | acc
-            ])
+            do_tokenize(
+              rest,
+              [
+                "#{unquote(pack_name)}:#{unquote(id)}" | acc
+              ],
+              config
+            )
 
           true ->
-            do_tokenize(rest, [
-              "#{unquote(pack_name)}:#{unquote(id)}",
-              "(" | acc
-            ])
+            do_tokenize(
+              inject_ending(rest),
+              [
+                "#{unquote(pack_name)}:#{unquote(id)}",
+                "(" | acc
+              ],
+              config
+            )
+        end
+      end
+
+      # NON-imported function WITHOUT scope
+      defp do_tokenize(
+             <<unquote(pack_name), ":", unquote(id), c::utf8, rest::binary>>,
+             acc,
+             config
+           )
+           when is_fn_complete(c) do
+        rest = <<c>> <> rest
+
+        cond do
+          Regex.match?(@r_fnclosoure, rest) ->
+            do_tokenize(
+              rest,
+              [
+                "#{unquote(pack_name)}:#{unquote(id)}" | acc
+              ],
+              config
+            )
+
+          true ->
+            do_tokenize(
+              inject_ending(rest),
+              [
+                "#{unquote(pack_name)}:#{unquote(id)}",
+                "(" | acc
+              ],
+              config
+            )
         end
       end
     end)
@@ -259,34 +323,34 @@ defmodule FusionDsl.Processor.Lexer do
   Enum.each(0..9, fn num ->
     str = to_string(num)
 
-    defp do_tokenize(<<"-", unquote(str), rest::binary>>, acc) do
-      do_tokenize_num(unquote(str) <> rest, acc, true)
+    defp do_tokenize(<<"-", unquote(str), rest::binary>>, acc, config) do
+      do_tokenize_num(unquote(str) <> rest, acc, true, config)
     end
 
-    defp do_tokenize(<<unquote(str), rest::binary>>, acc) do
-      do_tokenize_num(unquote(str) <> rest, acc, false)
+    defp do_tokenize(<<unquote(str), rest::binary>>, acc, config) do
+      do_tokenize_num(unquote(str) <> rest, acc, false, config)
     end
   end)
 
   # handle json objects
-  defp do_tokenize(<<"%'", rest::binary>>, acc) do
-    do_tokenize_string(rest, acc, "%'")
+  defp do_tokenize(<<"%'", rest::binary>>, acc, config) do
+    do_tokenize_string(rest, acc, "%'", config)
   end
 
   # Handle operators
   Enum.each(@lang_ops, fn op ->
-    defp do_tokenize(<<unquote(op), rest::binary>>, acc) do
-      do_tokenize(rest, [unquote(op) | acc])
+    defp do_tokenize(<<unquote(op), rest::binary>>, acc, config) do
+      do_tokenize(rest, [unquote(op) | acc], config)
     end
   end)
 
   # Variable indicators
   Enum.each(@lang_var, fn var ->
-    defp do_tokenize(<<unquote(var), rest::binary>>, acc) do
+    defp do_tokenize(<<unquote(var), rest::binary>>, acc, config) do
       case Regex.run(@r_var, rest) do
         [var_name] ->
           rest = String.slice(rest, String.length(var_name)..-1)
-          do_tokenize(rest, [unquote(var) <> var_name | acc])
+          do_tokenize(rest, [unquote(var) <> var_name | acc], config)
 
         _ ->
           {:error, acc, rest, "Bad variable name!"}
@@ -294,50 +358,50 @@ defmodule FusionDsl.Processor.Lexer do
     end
   end)
 
-  defp do_tokenize(<<"true", rest::binary>>, acc) do
-    do_tokenize(rest, [true | acc])
+  defp do_tokenize(<<"true", rest::binary>>, acc, config) do
+    do_tokenize(rest, [true | acc], config)
   end
 
-  defp do_tokenize(<<"false", rest::binary>>, acc) do
-    do_tokenize(rest, [false | acc])
+  defp do_tokenize(<<"false", rest::binary>>, acc, config) do
+    do_tokenize(rest, [false | acc], config)
   end
 
   # handle empty strings
-  defp do_tokenize(<<"''", rest::binary>>, acc) do
-    do_tokenize(rest, ["''" | acc])
+  defp do_tokenize(<<"''", rest::binary>>, acc, config) do
+    do_tokenize(rest, ["''" | acc], config)
   end
 
   # handle strings
-  defp do_tokenize(<<"'", rest::binary>>, acc) do
-    do_tokenize_string(rest, acc, "'")
+  defp do_tokenize(<<"'", rest::binary>>, acc, config) do
+    do_tokenize_string(rest, acc, "'", config)
   end
 
   # Ignores space
-  defp do_tokenize(<<" ", rest::binary>>, acc) do
-    do_tokenize(rest, acc)
+  defp do_tokenize(<<" ", rest::binary>>, acc, config) do
+    do_tokenize(rest, acc, config)
   end
 
   # Ignores tab
-  defp do_tokenize(<<"\t", rest::binary>>, acc) do
-    do_tokenize(rest, acc)
+  defp do_tokenize(<<"\t", rest::binary>>, acc, config) do
+    do_tokenize(rest, acc, config)
   end
 
   # Handles new line (Linux line ending)
-  defp do_tokenize(<<"\n", rest::binary>>, acc) do
-    do_tokenize(rest, ["\n" | acc])
+  defp do_tokenize(<<"\n", rest::binary>>, acc, config) do
+    do_tokenize(rest, ["\n" | acc], config)
   end
 
   # Ignores comment
-  defp do_tokenize(<<"#", rest::binary>>, acc) do
-    skip_line(rest, acc)
+  defp do_tokenize(<<"#", rest::binary>>, acc, config) do
+    skip_line(rest, acc, config)
   end
 
-  defp do_tokenize(<<"nil", rest::binary>>, acc) do
-    do_tokenize(rest, ["nil" | acc])
+  defp do_tokenize(<<"nil", rest::binary>>, acc, config) do
+    do_tokenize(rest, ["nil" | acc], config)
   end
 
   # Unmatched binary
-  defp do_tokenize(bin, acc) do
+  defp do_tokenize(bin, acc, config) do
     cond do
       Regex.match?(@r_lable, bin) ->
         # Lable
@@ -348,7 +412,7 @@ defmodule FusionDsl.Processor.Lexer do
           |> inject("def")
           |> inject(lable)
 
-        skip_line(bin, acc)
+        skip_line(bin, acc, config)
 
       Regex.match?(@r_goto, bin) ->
         # Goto instruction
@@ -359,7 +423,7 @@ defmodule FusionDsl.Processor.Lexer do
           |> inject("goto")
           |> inject(destination)
 
-        skip_line(bin, acc)
+        skip_line(bin, acc, config)
 
       true ->
         # Unmatched code. error will be generated!
@@ -367,7 +431,7 @@ defmodule FusionDsl.Processor.Lexer do
     end
   end
 
-  defp do_tokenize_string(rest, acc, add) do
+  defp do_tokenize_string(rest, acc, add, config) do
     case Regex.run(@r_string, rest, return: :index) do
       [_, {loc, _}] ->
         loc = loc + 1
@@ -383,7 +447,7 @@ defmodule FusionDsl.Processor.Lexer do
 
           rest
           |> String.slice(loc..-1)
-          |> do_tokenize([cmp_string | acc])
+          |> do_tokenize([cmp_string | acc], config)
         end
 
       _ ->
@@ -391,7 +455,7 @@ defmodule FusionDsl.Processor.Lexer do
     end
   end
 
-  defp do_tokenize_num(rest, acc, neg) do
+  defp do_tokenize_num(rest, acc, neg, config) do
     num_cnt =
       case Regex.run(@r_number, rest, return: :index) do
         [{0, num_cnt}] ->
@@ -421,15 +485,17 @@ defmodule FusionDsl.Processor.Lexer do
         final_num
       end
 
-    do_tokenize(String.slice(rest, num_cnt..-1), [final_num | acc])
+    do_tokenize(String.slice(rest, num_cnt..-1), [final_num | acc], config)
   end
 
   # Skips a line until line ending or empty binary
-  defp skip_line(<<"\n", _::binary>> = bin, acc), do: do_tokenize(bin, acc)
+  defp skip_line(<<"\n", _::binary>> = bin, acc, config),
+    do: do_tokenize(bin, acc, config)
 
-  defp skip_line(<<>>, acc), do: do_tokenize(<<>>, acc)
+  defp skip_line(<<>>, acc, config), do: do_tokenize(<<>>, acc, config)
 
-  defp skip_line(<<_::utf8, rest::binary>>, acc), do: skip_line(rest, acc)
+  defp skip_line(<<_::utf8, rest::binary>>, acc, config),
+    do: skip_line(rest, acc, config)
 
   defp inject(acc, x) do
     [x | acc]

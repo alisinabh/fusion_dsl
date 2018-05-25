@@ -3,6 +3,10 @@ defmodule FusionDsl do
   Documentation for FusionDsl.
   """
 
+  def get_packages do
+    [{FusionDsl.Kernel, []}] ++ Application.get_env(:fusion_dsl, :packages, [])
+  end
+
   def test_ast_begin(filename \\ "test/samples/logical.fus") do
     {:ok, conf, tokens} =
       FusionDsl.Processor.Lexer.tokenize(File.read!(filename))
