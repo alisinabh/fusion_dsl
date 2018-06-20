@@ -1,12 +1,14 @@
 defmodule FusionDslTest.SampleImpl do
   use FusionDsl.Impl
 
+  @functions [:test]
+
   @impl true
-  def list_functions, do: [:test]
+  def list_functions, do: @functions
 
   @doc "Just adds two arguments..."
-  def test({:test, ctx, [_, _] = args}, env) do
-    {:ok, [a, b], evn} = prep_arg(args, env)
+  def test({:test, _ctx, [_, _] = args}, env) do
+    {:ok, [a, b], env} = prep_arg(args, env)
     {:ok, a + b, env}
   end
 end

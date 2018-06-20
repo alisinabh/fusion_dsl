@@ -64,7 +64,7 @@ defmodule FusionDsl.Kernel do
   @impl true
   def list_functions, do: @functions
 
-  def fn_and({:and, ctx, args}, env) do
+  def fn_and({:and, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -77,7 +77,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def fn_or({:or, ctx, args}, env) do
+  def fn_or({:or, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -102,7 +102,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def add({:add, ctx, args}, env) do
+  def add({:add, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -121,7 +121,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def sub({:sub, ctx, args}, env) do
+  def sub({:sub, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -134,7 +134,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def mult({:mult, ctx, args}, env) do
+  def mult({:mult, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -147,7 +147,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def div({:div, ctx, args}, env) do
+  def div({:div, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -160,7 +160,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def mod({:mod, ctx, args}, env) do
+  def mod({:mod, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -173,7 +173,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def eq({:eq, ctx, args}, env) do
+  def eq({:eq, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -192,7 +192,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def neq({:neq, ctx, args}, env) do
+  def neq({:neq, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -213,7 +213,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def lte({:lte, ctx, args}, env) do
+  def lte({:lte, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -228,7 +228,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def gte({:gte, ctx, args}, env) do
+  def gte({:gte, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -243,7 +243,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def lt({:lt, ctx, args}, env) do
+  def lt({:lt, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -258,7 +258,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def gt({:gt, ctx, args}, env) do
+  def gt({:gt, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(args, env)
 
     cond do
@@ -273,7 +273,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def set({:set, ctx, [{:var, _, [var]}, right]}, env) do
+  def set({:set, _ctx, [{:var, _, [var]}, right]}, env) do
     if String.starts_with?(var, "_") do
       case get_var(env.prog, var, env) do
         {:ok, _, _} ->
@@ -292,22 +292,31 @@ defmodule FusionDsl.Kernel do
           %{env | vars: Map.put(env.vars, var, val)}
 
         [var | map_list] ->
-          var_val =
-            case get_var(env.prog, var, env) do
-              {:ok, var_val, env} ->
-                insert_map_var(map_list, val, var_val)
+          case get_var(env.prog, var, env) do
+            {:ok, var_val, env} ->
+              %{
+                env
+                | vars:
+                    Map.put(
+                      env.vars,
+                      var,
+                      insert_map_var(map_list, val, var_val)
+                    )
+              }
 
-              _ ->
-                insert_map_var(map_list, val, %{})
-            end
-
-          %{env | vars: Map.put(env.vars, var, var_val)}
+            _ ->
+              %{
+                env
+                | vars:
+                    Map.put(env.vars, var, insert_map_var(map_list, val, %{}))
+              }
+          end
       end
 
     {:ok, val, env}
   end
 
-  def rand({:rand, ctx, args}, env) do
+  def rand({:rand, _ctx, args}, env) do
     {:ok, [lower, upper], env} = prep_arg(args, env)
 
     cond do
@@ -320,7 +329,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def to_number({:to_number, ctx, args}, env) do
+  def to_number({:to_number, _ctx, args}, env) do
     {:ok, [binary], env} = prep_arg(args, env)
 
     cond do
@@ -380,17 +389,17 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def create_array({:create_array, ctx, args}, env) do
+  def create_array({:create_array, _ctx, args}, env) do
     {:ok, arr_elems, env} = prep_arg(args, env)
 
     {:ok, arr_elems, env}
   end
 
-  def noop({:noop, ctx, _}, env) do
+  def noop({:noop, _ctx, _}, env) do
     {:ok, nil, env}
   end
 
-  def jump_not({:jump_not, ctx, args}, env) do
+  def jump_not({:jump_not, _ctx, args}, env) do
     {:ok, [condition, jump_amount], env} = prep_arg(args, env)
 
     cond do
@@ -409,7 +418,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def elem({:elem, ctx, [_, _] = args}, env) do
+  def elem({:elem, _ctx, [_, _] = args}, env) do
     {:ok, [array, index], env} = prep_arg(args, env)
 
     cond do
@@ -422,7 +431,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def insert({:insert, ctx, [_, _, _] = args}, env) do
+  def insert({:insert, _ctx, [_, _, _] = args}, env) do
     {:ok, [array, index, value], env} = prep_arg(args, env)
 
     cond do
@@ -437,7 +446,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def wait({:wait, ctx, [_] = args}, env) do
+  def wait({:wait, _ctx, [_] = args}, env) do
     {:ok, [amount], env} = prep_arg(args, env)
 
     cond do
@@ -452,7 +461,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def remove({:remove, ctx, [_, _] = args}, env) do
+  def remove({:remove, _ctx, [_, _] = args}, env) do
     {:ok, [value, index], env} = prep_arg(args, env)
 
     cond do
@@ -474,7 +483,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def dispose({:dispose, ctx, [{:var, _, [name]}] = args}, env) do
+  def dispose({:dispose, _ctx, [{:var, _, [name]}] = args}, env) do
     {:ok, [value], env} = prep_arg(args, env)
 
     cond do
@@ -524,7 +533,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def contains({:contains, ctx, [_, _] = args}, env) do
+  def contains({:contains, _ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = prep_arg(args, env)
 
     cond do
@@ -542,7 +551,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def index_of({:index_of, ctx, [_, _] = args}, env) do
+  def index_of({:index_of, _ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = prep_arg(args, env)
 
     cond do
@@ -569,7 +578,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def last_index_of({:last_index_of, ctx, [_, _] = args}, env) do
+  def last_index_of({:last_index_of, _ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = prep_arg(args, env)
 
     cond do
@@ -606,7 +615,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def starts_with({:starts_with, ctx, [_, _] = args}, env) do
+  def starts_with({:starts_with, _ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = prep_arg(args, env)
 
     cond do
@@ -630,7 +639,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def ends_with({:ends_with, ctx, [_, _] = args}, env) do
+  def ends_with({:ends_with, _ctx, [_, _] = args}, env) do
     {:ok, [source, element], env} = prep_arg(args, env)
 
     cond do
@@ -659,7 +668,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def replace({:replace, ctx, [_, _, _] = args}, env) do
+  def replace({:replace, _ctx, [_, _, _] = args}, env) do
     {:ok, [source, element, replacement], env} = prep_arg(args, env)
 
     cond do
@@ -679,7 +688,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def reverse({:reverse, ctx, [_] = args}, env) do
+  def reverse({:reverse, _ctx, [_] = args}, env) do
     {:ok, [source], env} = prep_arg(args, env)
 
     cond do
@@ -697,7 +706,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def length({:length, ctx, [_] = args}, env) do
+  def length({:length, _ctx, [_] = args}, env) do
     {:ok, [source], env} = prep_arg(args, env)
 
     cond do
@@ -745,7 +754,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def regex({:regex, ctx, args}, env) do
+  def regex({:regex, _ctx, args}, env) do
     {:ok, [regex_str | opts] = f_args, env} = prep_arg(args, env)
 
     opt =
@@ -763,7 +772,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def regex_run({:regex_run, ctx, args}, env) do
+  def regex_run({:regex_run, _ctx, args}, env) do
     {:ok, [%Regex{} = regex, string] = f_args, env} = prep_arg(args, env)
 
     cond do
@@ -775,7 +784,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def regex_match({:regex_match, ctx, args}, env) do
+  def regex_match({:regex_match, _ctx, args}, env) do
     {:ok, [%Regex{} = regex, string] = f_args, env} = prep_arg(args, env)
 
     cond do
@@ -787,7 +796,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def regex_replace({:regex_replace, ctx, args}, env) do
+  def regex_replace({:regex_replace, _ctx, args}, env) do
     {:ok, [%Regex{} = regex, string, replacement] = f_args, env} =
       prep_arg(args, env)
 
@@ -800,7 +809,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def regex_scan({:regex_scan, ctx, args}, env) do
+  def regex_scan({:regex_scan, _ctx, args}, env) do
     {:ok, [%Regex{} = regex, string] = f_args, env} = prep_arg(args, env)
 
     cond do
@@ -812,7 +821,7 @@ defmodule FusionDsl.Kernel do
     end
   end
 
-  def to_string({:to_string, ctx, args}, env) do
+  def to_string({:to_string, _ctx, args}, env) do
     {:ok, [val], env} = prep_arg(args, env)
 
     {:ok, to_string(val), env}
@@ -852,7 +861,7 @@ defmodule FusionDsl.Kernel do
     Map.put(var_val, h, final)
   end
 
-  defp error(prog, ctx, msg) do
+  defp error(_prog, ctx, msg) do
     raise("Kernel error\n Line: #{ctx[:ln]}: #{msg}")
   end
 
@@ -868,9 +877,9 @@ defmodule FusionDsl.Kernel do
       end)
       |> Enum.reverse()
 
-  defp replace_json_vars([], json, prog, env, _ctx), do: {json, env}
+  defp replace_json_vars([], json, _prog, env, _ctx), do: {json, env}
 
-  defp replace_json_vars(variables, json, prog, env, ctx) do
+  defp replace_json_vars(variables, json, prog, env, _ctx) do
     Enum.reduce(variables, {json, env}, fn [name, var], acc ->
       {json, env} = acc
 

@@ -9,8 +9,6 @@ defmodule FusionDsl.Processor.AstProcessor do
   ```
   """
 
-  alias FusionDsl.Processor.Program
-
   @clause_beginners ["if", "for", "while"]
   @noops ["noop"]
   @operators [
@@ -51,37 +49,6 @@ defmodule FusionDsl.Processor.AstProcessor do
   }
 
   @short_setters ["+=", "-=", "*=", "/=", "%="]
-
-  @functions [
-    :rand,
-    :goto,
-    :to_number,
-    :to_string,
-    :int,
-    :round,
-    :not,
-    :insert,
-    :elem,
-    :wait,
-    :remove,
-    :dispose,
-    :contains,
-    :index_of,
-    :last_index_of,
-    :length,
-    :starts_with,
-    :ends_with,
-    :slice,
-    :replace,
-    :reverse,
-    :regex,
-    :regex_match,
-    :regex_replace,
-    :regex_run,
-    :regex_scan,
-    :json_decode,
-    :json_encode
-  ]
 
   @packages FusionDsl.get_packages()
 
@@ -335,7 +302,7 @@ defmodule FusionDsl.Processor.AstProcessor do
     {:loop, jump_to_args} =
       Enum.find(config.clauses, nil, fn x ->
         case x do
-          {:loop, args} ->
+          {:loop, _args} ->
             true
 
           _ ->

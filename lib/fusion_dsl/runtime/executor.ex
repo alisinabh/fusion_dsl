@@ -3,7 +3,6 @@ defmodule FusionDsl.Runtime.Executor do
   Executes an Ivrone program
   """
 
-  alias FusionDsl.Processor.Program
   alias FusionDsl.Helpers.FunctionNames
 
   @jump_start_throttle Application.get_env(:fusion_dsl, :jump_start_throttle)
@@ -63,7 +62,7 @@ defmodule FusionDsl.Runtime.Executor do
     jump(t, r_jmp - 1)
   end
 
-  defp jump_to([{_, ctx, _} = h | t] = p, ln) do
+  defp jump_to([{_, ctx, _} | t] = p, ln) do
     cond do
       ctx[:ln] == ln ->
         p
@@ -95,7 +94,7 @@ defmodule FusionDsl.Runtime.Executor do
     {:end, env}
   end
 
-  def execute_ast({:var, ctx, [var]}, env) do
+  def execute_ast({:var, _ctx, [var]}, env) do
     FusionDsl.Impl.get_var(env.prog, var, env)
   end
 
@@ -115,11 +114,11 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
-  def execute_ast({:jump, ctx, [jump_amount]}, env) do
+  def execute_ast({:jump, _ctx, [jump_amount]}, env) do
     {:jump, jump_amount, env}
   end
 
-  def execute_ast({:jump_to, ctx, [line_number, skip, opt]}, env) do
+  def execute_ast({:jump_to, _ctx, [line_number, skip, opt]}, env) do
     {:jump_to, {line_number, skip, opt}, env}
   end
 
@@ -153,7 +152,7 @@ defmodule FusionDsl.Runtime.Executor do
     {:ok, v, env}
   end
 
-  defp error(prog, ctx, msg) do
+  defp error(_prog, ctx, msg) do
     raise("Kernel error\n Line: #{ctx[:ln]}: #{msg}")
   end
 end

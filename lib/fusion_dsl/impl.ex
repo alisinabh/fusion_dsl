@@ -107,7 +107,7 @@ defmodule FusionDsl.Impl do
     end
   end
 
-  defp do_get_var(prog, acc, [], env) do
+  defp do_get_var(_prog, acc, [], env) do
     {:ok, acc, env}
   end
 end
