@@ -123,10 +123,8 @@ defmodule FusionDsl.Processor.Lexer do
   end
 
   # Headers finished
-  defp tokenize_headers(<<"\n", code::binary>>, config, ln) do
-    # {:ok, Map.put(acc, :start_code, ln + 1), code}
-    {:ok, CompileConfig.set_start_code(config, ln + 1), code}
-  end
+  defp tokenize_headers(<<"\n", code::binary>>, config, ln),
+    do: {:ok, CompileConfig.set_start_code(config, ln + 1), code}
 
   # Headers process
   defp tokenize_headers(code, config, ln) do
@@ -146,7 +144,15 @@ defmodule FusionDsl.Processor.Lexer do
         )
 
       _ ->
-        {:error, :unknown_header, code}
+        if String.starts_with?(String.trim_leading(code), "#") do
+          tokenize_headers(
+            Regex.replace(~r/^.*\#.*\n/, code, ""),
+            config,
+            ln + 1
+          )
+        else
+          {:error, :unknown_header, code}
+        end
     end
   end
 
