@@ -6,11 +6,14 @@ defmodule FusionDslTest.IntegrationTest do
   alias FusionDsl.Runtime.Enviornment
   alias FusionDsl.Runtime.Executor
 
-  @integration_file "test/samples/integration.fus"
-  @correct_integration_trues 1
+  @sample_impl_file "test/samples/integration.fus"
+  @multi_import_file "test/samples/multi_import.fus"
 
-  test "integrated functions are working" do
-    file_data = File.read!(@integration_file)
+  @correct_sample_impl_trues 1
+  @correct_multi_import_trues 3
+
+  test "SamplImpl integrated function is working" do
+    file_data = File.read!(@sample_impl_file)
     assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
@@ -20,7 +23,25 @@ defmodule FusionDslTest.IntegrationTest do
     result = env.vars["result"]
 
     correct =
-      Enum.reduce(1..@correct_integration_trues, "", fn _x, acc ->
+      Enum.reduce(1..@correct_sample_impl_trues, "", fn _x, acc ->
+        "true," <> acc
+      end)
+
+    assert result == correct
+  end
+
+  test "multi_import integrated function is working" do
+    file_data = File.read!(@multi_import_file)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
+
+    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:end, env} = Executor.execute(env)
+    result = env.vars["result"]
+
+    correct =
+      Enum.reduce(1..@correct_multi_import_trues, "", fn _x, acc ->
         "true," <> acc
       end)
 
