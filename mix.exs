@@ -4,11 +4,21 @@ defmodule FusionDsl.MixProject do
   def project do
     [
       app: :fusion_dsl,
-      version: "0.1.0",
+      version: "0.0.0",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+
+      # Docs
+      name: "Fusion DSL",
+      source_url: "https://github.com/alisinabh/fusion_dsl",
+      homepage_url: "https://fusiondsl.org",
+      docs: [
+        main: "readme",
+        logo: "fusion-dsl-250px.png",
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -23,7 +33,8 @@ defmodule FusionDsl.MixProject do
   defp deps do
     [
       {:poison, "~> 3.1"},
-      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false}
+      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
   end
 

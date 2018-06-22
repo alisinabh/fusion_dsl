@@ -4,10 +4,7 @@ defmodule FusionDsl.Runtime.Enviornment do
   """
 
   defstruct vars: %{},
-            mod: FusionDsl.Runtime.Enviornments.TestEnviornment,
             sys_vars: %{},
-            agi: nil,
-            last_user_action: DateTime.utc_now(),
             cur_proc: [:main],
             jump_c: 0,
             assigns: %{},
@@ -15,8 +12,24 @@ defmodule FusionDsl.Runtime.Enviornment do
 
   alias FusionDsl.Processor.Program
 
-  @type prog :: %Program{}
-  @type env :: %__MODULE__{}
+  @typedoc """
+  The enviornment structure of executing scripts which contains:
+
+   - vars: Variables and their values.
+   - sys_vars: Systematic variables and their values.
+   - cur_proc: Stack of procedures.
+   - assigns: Assigns which packages manipulated.
+   - prog: Compiled program structure
+   - jump_c: A safety integer counting number of jumps in code (Zombie detector)
+  """
+  @type t :: %__MODULE__{
+          vars: %{String.t() => any()},
+          sys_vars: %{String.t() => any()},
+          cur_proc: [atom()],
+          assigns: Map.t(),
+          prog: Program.t(),
+          jump_c: Integer.t()
+        }
 
   @doc """
   Prepares enviornments data and returns the data

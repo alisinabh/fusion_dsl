@@ -1,15 +1,11 @@
 defmodule FusionDsl.Impl do
   @moduledoc """
-  Implementation module for FusionDsl
+  Implementation module for FusionDsl. This module helps with developing packages for fusion dsl.
 
   TODO: Add docs
   """
 
   alias FusionDsl.Runtime.Executor
-
-  @type env :: %FusionDsl.Runtime.Enviornment{}
-  @type ast :: {atom(), Keyword.t(), List.t()}
-  @type prog :: %FusionDsl.Processor.Program{}
 
   defmacro __using__(_opts) do
     quote do
@@ -18,7 +14,16 @@ defmodule FusionDsl.Impl do
     end
   end
 
-  @callback list_functions() :: List.t()
+  @doc """
+  Should return list of function names this package provides as atoms.
+
+  ## Example
+  ```elixir
+  @impl true
+  def list_functions(), do: [:foo, :bar]
+  ```
+  """
+  @callback list_functions() :: [atom()]
 
   @doc "Puts a key in env assigns"
   def put_assign(env, key, value),
