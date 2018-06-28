@@ -4,6 +4,7 @@ defmodule FusionDsl.Runtime.Executor do
   """
 
   alias FusionDsl.Helpers.FunctionNames
+  alias FusionDsl.Impl
 
   @jump_start_throttle Application.get_env(:fusion_dsl, :jump_start_throttle)
   @jump_throttle_every Application.get_env(:fusion_dsl, :jump_throttle_every)
@@ -95,7 +96,7 @@ defmodule FusionDsl.Runtime.Executor do
   end
 
   def execute_ast({:var, _ctx, [var]}, env) do
-    FusionDsl.Impl.get_var(env.prog, var, env)
+    Impl.get_var(env.prog, var, env)
   end
 
   def execute_ast({:goto, ctx, [proc]}, env) when is_atom(proc) do

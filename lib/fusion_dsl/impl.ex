@@ -78,7 +78,7 @@ defmodule FusionDsl.Impl do
     end
   end
 
-  # Runs prep_arg on each argument in the list and returns the 
+  # Runs prep_arg on each argument in the list and returns the
   # result in same order
   defp do_prep_args([h | t], env, acc) do
     case prep_arg(h, env) do

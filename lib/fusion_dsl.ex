@@ -10,6 +10,12 @@ defmodule FusionDsl do
    - Code execution.
   """
 
+  alias FusionDsl.Kernel
+  alias FusionDsl.Processor.Lexer
+  alias FusionDsl.Processor.AstProcessor
+  alias FusionDsl.Runtime.Enviornment
+  alias FusionDsl.Runtime.Executor
+
   @typedoc """
   Keywords used in package configs
 
@@ -21,19 +27,18 @@ defmodule FusionDsl do
   @doc """
   Returns a list of configured packages in their original configuration format
   """
-  @spec get_packages() :: [{atom(), [package_options]}]
-  def get_packages() do
-    [{FusionDsl.Kernel, []}] ++ Application.get_env(:fusion_dsl, :packages, [])
+  @spec get_packages :: [{atom(), [package_options]}]
+  def get_packages do
+    [{Kernel, []}] ++ Application.get_env(:fusion_dsl, :packages, [])
   end
 
   def test_ast_begin(filename \\ "test/samples/logical.fus") do
-    {:ok, conf, tokens} =
-      FusionDsl.Processor.Lexer.tokenize(File.read!(filename))
+    {:ok, conf, tokens} = Lexer.tokenize(File.read!(filename))
 
-    lines = FusionDsl.Processor.Lexer.split_by_lines(tokens, conf.start_code)
-    {:ok, ast_data} = FusionDsl.Processor.AstProcessor.generate_ast(conf, lines)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = FusionDsl.Runtime.Enviornment.prepare_env(ast_data.prog)
-    FusionDsl.Runtime.Executor.execute(env)
+    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    Executor.execute(env)
   end
 end
