@@ -216,7 +216,7 @@ defmodule FusionDsl.Processor.Lexer do
             do_tokenize(
               rest,
               [
-                "#{unquote(pack_name)}:#{unquote(id)}" | acc
+                "#{unquote(pack_name)}.#{unquote(id)}" | acc
               ],
               config
             )
@@ -225,7 +225,7 @@ defmodule FusionDsl.Processor.Lexer do
             do_tokenize(
               inject_ending(rest),
               [
-                "#{unquote(pack_name)}:#{unquote(id)}",
+                "#{unquote(pack_name)}.#{unquote(id)}",
                 "(" | acc
               ],
               config
@@ -247,7 +247,7 @@ defmodule FusionDsl.Processor.Lexer do
             do_tokenize(
               rest,
               [
-                "#{unquote(pack_name)}:#{unquote(id)}" | acc
+                "#{unquote(pack_name)}.#{unquote(id)}" | acc
               ],
               config
             )
@@ -256,7 +256,7 @@ defmodule FusionDsl.Processor.Lexer do
             do_tokenize(
               inject_ending(rest),
               [
-                "#{unquote(pack_name)}:#{unquote(id)}",
+                "#{unquote(pack_name)}.#{unquote(id)}",
                 "(" | acc
               ],
               config
@@ -266,7 +266,7 @@ defmodule FusionDsl.Processor.Lexer do
 
       # NON-imported function with scope
       defp do_tokenize(
-             <<unquote(pack_name), ":", unquote(id), "(", rest::binary>>,
+             <<unquote(pack_name), ".", unquote(id), "(", rest::binary>>,
              acc,
              config
            ) do
@@ -275,7 +275,7 @@ defmodule FusionDsl.Processor.Lexer do
             do_tokenize(
               rest,
               [
-                "#{unquote(pack_name)}:#{unquote(id)}" | acc
+                "#{unquote(pack_name)}.#{unquote(id)}" | acc
               ],
               config
             )
@@ -284,7 +284,7 @@ defmodule FusionDsl.Processor.Lexer do
             do_tokenize(
               inject_ending(rest),
               [
-                "#{unquote(pack_name)}:#{unquote(id)}",
+                "#{unquote(pack_name)}.#{unquote(id)}",
                 "(" | acc
               ],
               config
@@ -294,7 +294,7 @@ defmodule FusionDsl.Processor.Lexer do
 
       # NON-imported function WITHOUT scope
       defp do_tokenize(
-             <<unquote(pack_name), ":", unquote(id), c::utf8, rest::binary>>,
+             <<unquote(pack_name), ".", unquote(id), c::utf8, rest::binary>>,
              acc,
              config
            )
@@ -306,7 +306,7 @@ defmodule FusionDsl.Processor.Lexer do
             do_tokenize(
               rest,
               [
-                "#{unquote(pack_name)}:#{unquote(id)}" | acc
+                "#{unquote(pack_name)}.#{unquote(id)}" | acc
               ],
               config
             )
@@ -315,7 +315,7 @@ defmodule FusionDsl.Processor.Lexer do
             do_tokenize(
               inject_ending(rest),
               [
-                "#{unquote(pack_name)}:#{unquote(id)}",
+                "#{unquote(pack_name)}.#{unquote(id)}",
                 "(" | acc
               ],
               config

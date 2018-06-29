@@ -9,7 +9,7 @@ defmodule FusionDslTest.IntegrationTest do
   @sample_impl_file "test/samples/integration.fus"
   @multi_import_file "test/samples/multi_import.fus"
 
-  @correct_sample_impl_trues 1
+  @correct_sample_impl_trues 2
   @correct_multi_import_trues 3
 
   test "SamplImpl integrated function is working" do

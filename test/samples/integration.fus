@@ -11,5 +11,7 @@ def main:
 
   $dat = test($map.number, $add)
 
+  $dat2 = SampleImpl.test($map.number, $add)
 
   $result = to_string($dat == ($add + $var)) + ','
+  $result += to_string($dat2 == ($add + $var)) + ','

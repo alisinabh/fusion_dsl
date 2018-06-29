@@ -403,7 +403,7 @@ defmodule FusionDsl.Processor.AstProcessor do
       id = to_string(atom_id)
 
       defp gen_ast(
-             ["(", <<unquote(pack_name), ":", unquote(id)>> | args],
+             ["(", <<unquote(pack_name), ".", unquote(id)>> | args],
              t_lines,
              config
            ) do
@@ -561,6 +561,7 @@ defmodule FusionDsl.Processor.AstProcessor do
     :not_found
   end
 
+  # Inserts generated ast in current procedure (config.proc)
   defp insert_ast_in_config(config, ast) do
     %{
       config
