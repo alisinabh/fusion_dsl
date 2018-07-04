@@ -8,12 +8,22 @@ defmodule FusionDsl.Processor.CompileConfig do
   defstruct imports: %{"Kernel" => true},
             proc: nil,
             headers: %{},
-            proc: nil,
             ln: 0,
             prog: %Program{},
             end_asts: [],
             clauses: [],
             start_code: -1
+
+  @type t :: %__MODULE__{
+          imports: %{String.t() => true | false},
+          proc: atom(),
+          headers: %{String.t() => String.t()},
+          ln: Integer.t(),
+          prog: Program.t(),
+          end_asts: List.t(),
+          clauses: List.t(),
+          start_code: Integer.t()
+        }
 
   @doc "Initiates a config struct"
   def init, do: %__MODULE__{}

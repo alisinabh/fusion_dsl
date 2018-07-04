@@ -9,6 +9,8 @@ defmodule FusionDsl.Processor.AstProcessor do
   ```
   """
 
+  alias FusionDsl.Processor.CompileConfig
+
   @clause_beginners ["if", "for", "while"]
   @noops ["noop"]
   @operators [
@@ -59,6 +61,8 @@ defmodule FusionDsl.Processor.AstProcessor do
     - config: configuration of program
     - tokens: list of line splitted tokens
   """
+  @spec generate_ast(CompileConfig.t(), [[String.t()]]) ::
+          {:ok, CompileConfig.t()}
   def generate_ast(config, tokens) do
     do_generate_ast(tokens, config)
   end
