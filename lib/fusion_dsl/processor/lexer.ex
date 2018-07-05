@@ -66,7 +66,7 @@ defmodule FusionDsl.Processor.Lexer do
    - strings: operators or identifires
    - number: A literal number. float or integer
   """
-  @spec tokenize(String.t()) :: {:ok, Map.t(), List.t()} | {:error, String.t()}
+  @spec tokenize(String.t()) :: {:ok, map(), list()} | {:error, String.t()}
   def tokenize(raw_code) do
     raw_code = normalize(raw_code)
     {:ok, config, code} = tokenize_headers(raw_code, CompileConfig.init(), 1)
@@ -77,7 +77,7 @@ defmodule FusionDsl.Processor.Lexer do
   @doc """
   Splits list of tokens to lists of lists by line with line number in beggining of each line
   """
-  @spec split_by_lines(List.t(), Integer.t()) :: List.t()
+  @spec split_by_lines(list, integer) :: list()
   def split_by_lines(tokens, start_code_line \\ 1) do
     do_split_by_lines(tokens, [start_code_line], [], start_code_line)
   end

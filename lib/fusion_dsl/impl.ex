@@ -86,8 +86,8 @@ defmodule FusionDsl.Impl do
   - args: list of arguments or just one argument
   - env: the Environment struct
   """
-  @spec prep_arg(Envronment.t(), List.t() | any()) ::
-          {:ok, List.t() | any(), Environment.t()}
+  @spec prep_arg(Environment.t(), list() | any()) ::
+          {:ok, list() | any(), Environment.t()}
   def prep_arg(%Environment{} = env, args) when is_list(args) do
     do_prep_args(args, env, [])
   end

@@ -11,8 +11,8 @@ defmodule FusionDsl.Processor.Program do
           name: String.t(),
           version: String.t(),
           config: [Keyword.t()],
-          fusion_version: Integer.t(),
-          procedures: %{String.t() => List.t()}
+          fusion_version: non_neg_integer(),
+          procedures: %{String.t() => list(ast)}
         }
 
   @typedoc """
@@ -37,14 +37,14 @@ defmodule FusionDsl.Processor.Program do
   @typedoc """
   Context of each AST, Holds data like Line number (`:ln`)
   """
-  @type ast_ctx :: {:ln, Integer.t()}
+  @type ast_ctx :: {:ln, integer}
 
   @typedoc """
   List of ast arguments. These args can be immediate values or AST
 
   `FusionDsl.Impl.prep_args/2` can be used to get immediate values of ASTs
   """
-  @type ast_arg :: ast | Integer.t() | Float.t() | String.t() | Map.t()
+  @type ast_arg :: ast | integer | float | String.t() | map
 
   defstruct [:name, :version, config: [], fusion_version: nil, procedures: %{}]
 end

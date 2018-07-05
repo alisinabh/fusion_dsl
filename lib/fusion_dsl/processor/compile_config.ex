@@ -18,11 +18,11 @@ defmodule FusionDsl.Processor.CompileConfig do
           imports: %{String.t() => true | false},
           proc: atom(),
           headers: %{String.t() => String.t()},
-          ln: Integer.t(),
+          ln: integer(),
           prog: Program.t(),
-          end_asts: List.t(),
-          clauses: List.t(),
-          start_code: Integer.t()
+          end_asts: list(),
+          clauses: list(),
+          start_code: integer()
         }
 
   @doc "Initiates a config struct"

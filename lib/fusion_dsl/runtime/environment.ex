@@ -26,9 +26,9 @@ defmodule FusionDsl.Runtime.Environment do
           vars: %{String.t() => any()},
           sys_vars: %{String.t() => any()},
           cur_proc: [atom()],
-          assigns: Map.t(),
+          assigns: map(),
           prog: Program.t(),
-          jump_c: Integer.t()
+          jump_c: integer()
         }
 
   @doc """
