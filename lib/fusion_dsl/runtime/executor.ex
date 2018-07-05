@@ -96,7 +96,7 @@ defmodule FusionDsl.Runtime.Executor do
   end
 
   def execute_ast({:var, _ctx, [var]}, env) do
-    Impl.get_var(env.prog, var, env)
+    Impl.get_var(env, var)
   end
 
   def execute_ast({:goto, ctx, [proc]}, env) when is_atom(proc) do

@@ -1,4 +1,4 @@
-defmodule FusionDsl.Runtime.Enviornment do
+defmodule FusionDsl.Runtime.Environment do
   @moduledoc """
   Envoirnment struct and behaviours for the programs
   """

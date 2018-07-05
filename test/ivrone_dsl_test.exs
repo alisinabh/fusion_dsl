@@ -4,7 +4,7 @@ defmodule FusionDslTest do
 
   alias FusionDsl.Processor.Lexer
   alias FusionDsl.Processor.AstProcessor
-  alias FusionDsl.Runtime.Enviornment
+  alias FusionDsl.Runtime.Environment
   alias FusionDsl.Runtime.Executor
 
   @full_tokens_file "test/samples/full_tokens.fus"
@@ -102,7 +102,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(env)
     assert env.vars["result"] == @correct_logic_result
   end
@@ -113,7 +113,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(env)
     assert env.vars["result"] == @correct_conditinal_result
   end
@@ -124,7 +124,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
@@ -142,7 +142,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
@@ -160,7 +160,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
@@ -178,7 +178,7 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 

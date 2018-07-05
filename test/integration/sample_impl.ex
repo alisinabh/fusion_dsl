@@ -8,7 +8,7 @@ defmodule FusionDslTest.SampleImpl do
 
   @doc "Just adds two arguments..."
   def test({:test, _ctx, [_, _] = args}, env) do
-    {:ok, [a, b], env} = prep_arg(args, env)
+    {:ok, [a, b], env} = prep_arg(env, args)
     {:ok, a + b, env}
   end
 end

@@ -8,13 +8,13 @@ defmodule FusionDslTest.SampleImpl2 do
 
   @doc "Calculates fibonatchi"
   def fibo({:fibo, _ctx, [_] = args}, env) do
-    {:ok, [max], env} = prep_arg(args, env)
+    {:ok, [max], env} = prep_arg(env, args)
     {:ok, fib(max), env}
   end
 
   @doc "Calculates power a^b"
   def pow({:pow, _ctx, [_, _] = args}, env) do
-    {:ok, [a, b], env} = prep_arg(args, env)
+    {:ok, [a, b], env} = prep_arg(env, args)
     {:ok, :math.pow(a, b), env}
   end
 

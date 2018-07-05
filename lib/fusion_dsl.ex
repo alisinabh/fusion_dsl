@@ -13,7 +13,7 @@ defmodule FusionDsl do
   alias FusionDsl.Kernel
   alias FusionDsl.Processor.Lexer
   alias FusionDsl.Processor.AstProcessor
-  alias FusionDsl.Runtime.Enviornment
+  alias FusionDsl.Runtime.Environment
   alias FusionDsl.Runtime.Executor
 
   @typedoc """
@@ -38,7 +38,7 @@ defmodule FusionDsl do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     Executor.execute(env)
   end
 end

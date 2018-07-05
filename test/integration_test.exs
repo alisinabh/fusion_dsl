@@ -3,7 +3,7 @@ defmodule FusionDslTest.IntegrationTest do
 
   alias FusionDsl.Processor.Lexer
   alias FusionDsl.Processor.AstProcessor
-  alias FusionDsl.Runtime.Enviornment
+  alias FusionDsl.Runtime.Environment
   alias FusionDsl.Runtime.Executor
 
   @sample_impl_file "test/samples/integration.fus"
@@ -18,7 +18,7 @@ defmodule FusionDslTest.IntegrationTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
@@ -36,7 +36,7 @@ defmodule FusionDslTest.IntegrationTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
