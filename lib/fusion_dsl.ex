@@ -29,7 +29,9 @@ defmodule FusionDsl do
   """
   @spec get_packages :: [{atom(), [package_options]}]
   def get_packages do
-    [{Kernel, []}] ++ Application.get_env(:fusion_dsl, :packages, [])
+    raw_packages = Application.get_env(:fusion_dsl, :packages, [])
+    packages = FusionDsl.NativeImpl.create_native_packages(raw_packages)
+    [{Kernel, []}] ++ packages
   end
 
   def test_ast_begin(filename \\ "test/samples/logical.fus") do
