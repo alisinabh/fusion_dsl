@@ -1,23 +1,33 @@
 defmodule FusionDsl.Runtime.Executor do
   @moduledoc """
-  Executes an Ivrone program
+  Functions to control and manage execution cycles of fusion dsl.
   """
 
   alias FusionDsl.Helpers.FunctionNames
   alias FusionDsl.Impl
+  alias FusionDsl.Processor.Program
+  alias FusionDsl.Processor.Environment
 
-  @jump_start_throttle Application.get_env(:fusion_dsl, :jump_start_throttle)
-  @jump_throttle_every Application.get_env(:fusion_dsl, :jump_throttle_every)
+  @jump_start_throttle Application.get_env(
+                         :fusion_dsl,
+                         :jump_start_throttle,
+                         200
+                       )
+  @jump_throttle_every Application.get_env(
+                         :fusion_dsl,
+                         :jump_throttle_every,
+                         20
+                       )
   @jump_throttle_time_ms Application.get_env(
                            :fusion_dsl,
-                           :jump_throttle_time_ms
+                           :jump_throttle_time_ms,
+                           50
                          )
 
   @doc """
   Executes the program in given enviornment
   """
-  def execute(env) do
-    proc = List.first(env.cur_proc)
+  def execute(env, proc \\ :main) do
     execute_procedure(env.prog.procedures[proc], env)
   end
 
@@ -73,6 +83,14 @@ defmodule FusionDsl.Runtime.Executor do
     end
   end
 
+  @doc """
+  Executes a single FusionDsl AST and returns the result.
+  """
+  @spec execute_ast(Program.ast(), Environment.t()) ::
+          {:ok, any(), Environment.t()}
+          | {:jump, integer(), Environment.t()}
+          | {:jump_to, any(), Environment.t()}
+          | {:error, String.t()}
   def execute_ast({{module, func}, ctx, args}, env) do
     module_func = FunctionNames.normalize!(func)
 
@@ -154,6 +172,7 @@ defmodule FusionDsl.Runtime.Executor do
   end
 
   defp error(_prog, ctx, msg) do
-    raise("Kernel error\n Line: #{ctx[:ln]}: #{msg}")
+    # raise("Kernel error\n Line: #{ctx[:ln]}: #{msg}")
+    {:error, "Kernel error\n Line: #{ctx[:ln]}: #{msg}"}
   end
 end
