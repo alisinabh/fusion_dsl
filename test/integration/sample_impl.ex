@@ -4,7 +4,7 @@ defmodule FusionDslTest.SampleImpl do
   @functions [:test]
 
   @impl true
-  def list_functions, do: @functions
+  def __list_fusion_functions__, do: @functions
 
   @doc "Just adds two arguments..."
   def test({:test, _ctx, [_, _] = args}, env) do

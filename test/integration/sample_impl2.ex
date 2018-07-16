@@ -4,7 +4,7 @@ defmodule FusionDslTest.SampleImpl2 do
   @functions [:fibo, :pow]
 
   @impl true
-  def list_functions, do: @functions
+  def __list_fusion_functions__, do: @functions
 
   @doc "Calculates fibonatchi"
   def fibo({:fibo, _ctx, [_] = args}, env) do

@@ -62,7 +62,7 @@ defmodule FusionDsl.Kernel do
   ]
 
   @impl true
-  def list_functions, do: @functions
+  def __list_fusion_functions__, do: @functions
 
   def fn_and({:and, _ctx, args}, env) do
     {:ok, [left, right], env} = prep_arg(env, args)

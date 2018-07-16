@@ -2,7 +2,7 @@ FORMAT: FUSION1
 NAME: multi_imp
 VERSION: v0.1
 IMPORT: SampleImpl
-IMPORT: SampleImpl2
+IMPORT: ChangeNameImpl
 
 def main:
   $var = rand -90, 90

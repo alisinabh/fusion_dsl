@@ -1,9 +1,25 @@
-# This file implements native elixir packages.
-# Native elixir packages can be set in :packages config of
-# :fusion_dsl. They have `type: :native` in their package
-# opts. Please refer to docs for more info.
-
 defmodule FusionDsl.NativeImpl do
+  @moduledoc """
+  This module helps with building proxy Fusion modules to native erlang/elixir
+  modules.
+
+  A native package has `type: :native` in its opts.
+
+  Example:
+  ```
+  config :fusion_dsl, packages: [{String, [type: :native]}, ...]
+  ```
+
+  Refer to plugins docs for more info.
+  """
+
+  @doc """
+  Creates proxy modules for native packages.
+
+  Returns a new list of all packages and manipulates the native
+  package list with new module names.
+  """
+  @spec create_native_packages(List.t()) :: List.t()
   def create_native_packages(packages) do
     Enum.reduce(packages, [], fn package, acc ->
       {module, opts} = package
@@ -12,12 +28,7 @@ defmodule FusionDsl.NativeImpl do
         :native ->
           pack_mod = String.to_atom("Elixir.FusionDsl.Dyn.#{module}")
 
-          if not function_exported?(pack_mod, :__info__, 1) do
-            IO.puts("module #{pack_mod} not found")
-            create_fusion_module(module, pack_mod, opts)
-          else
-            IO.puts("#{pack_mod} found")
-          end
+          create_module_not_exists(module, pack_mod, opts)
 
           [{pack_mod, opts} | acc]
 
@@ -25,6 +36,13 @@ defmodule FusionDsl.NativeImpl do
           [package | acc]
       end
     end)
+  end
+
+  # Creates module if module does not exist
+  defp create_module_not_exists(module, pack_mod, opts) do
+    if not function_exported?(pack_mod, :__info__, 1) do
+      create_fusion_module(module, pack_mod, opts)
+    end
   end
 
   defp create_fusion_module(module, pack_mod, opts) do
@@ -43,34 +61,12 @@ defmodule FusionDsl.NativeImpl do
           list
       end
 
-    get_function_doc = fn module, function ->
-      docs = Code.get_docs(module, :docs)
-
-      doc =
-        Enum.find(docs, fn {{name, _}, _, kind, _, _} ->
-          name == function and kind == :def
-        end)
-
-      case doc do
-        {{^function, _}, _, _, args, doc} when is_binary(doc) ->
-          arg_docs =
-            Enum.reduce(args, "## Arguments\n", fn {name, _, _}, acc ->
-              acc <> "\n  - #{name}"
-            end)
-
-          doc <> "\n" <> arg_docs
-
-        _ ->
-          "No native documentation available!"
-      end
-    end
-
     # Quote implementation of each function
     impl_functions =
       Enum.reduce(module_functions, [], fn fn_name, acc ->
         data =
           quote do
-            @doc "#{unquote(get_function_doc.(module, fn_name))}"
+            @doc "#{unquote(get_function_doc(module, fn_name))}"
             def unquote(fn_name)({unquote(fn_name), _ctx, args}, env) do
               {:ok, args, env} = prep_arg(env, args)
 
@@ -87,22 +83,49 @@ defmodule FusionDsl.NativeImpl do
         use FusionDsl.Impl
 
         @impl true
-        def list_functions, do: unquote(module_functions)
+        def __list_fusion_functions__, do: unquote(module_functions)
 
         unquote(impl_functions)
       end
 
-    IO.puts("Creating module #{pack_mod}")
-
     try do
       Module.create(pack_mod, impl_contents, Macro.Env.location(__ENV__))
     rescue
-      CompileError -> :ok
+      CompileError ->
+        # As get_packages in FusionDsl module will get called async,
+        # Sometimes this method would be called twice.
+        # To fix this problem we will ignore module exists exception
+        # and rely on the Tests below for the module.
+        :ok
     end
 
-    # Test module
-    if :erlang.apply(pack_mod, :list_functions, []) != module_functions do
-      raise "Module #{pack_mod} is not returning list_function as expected!"
+    # Test module and raise if its not returning function list as expected.
+    if :erlang.apply(pack_mod, :__list_fusion_functions__, []) !=
+         module_functions do
+      raise "Module #{pack_mod} is not returning __list_fusion_function__ as expected!"
+    end
+  end
+
+  # Returns documentation of native functions with argument lists
+  defp get_function_doc(module, function) do
+    docs = Code.get_docs(module, :docs)
+
+    doc =
+      Enum.find(docs, fn {{name, _}, _, kind, _, _} ->
+        name == function and kind == :def
+      end)
+
+    case doc do
+      {{^function, _}, _, _, args, doc} when is_binary(doc) ->
+        arg_docs =
+          Enum.reduce(args, "## Arguments\n", fn {name, _, _}, acc ->
+            acc <> "\n  - #{name}"
+          end)
+
+        doc <> "\n" <> arg_docs
+
+      _ ->
+        "No native documentation available!"
     end
   end
 end

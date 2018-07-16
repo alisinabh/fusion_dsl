@@ -15,6 +15,7 @@ defmodule FusionDsl do
   alias FusionDsl.Processor.AstProcessor
   alias FusionDsl.Runtime.Environment
   alias FusionDsl.Runtime.Executor
+  alias FusionDsl.NativeImpl
 
   @typedoc """
   Keywords used in package configs
@@ -30,7 +31,7 @@ defmodule FusionDsl do
   @spec get_packages :: [{atom(), [package_options]}]
   def get_packages do
     raw_packages = Application.get_env(:fusion_dsl, :packages, [])
-    packages = FusionDsl.NativeImpl.create_native_packages(raw_packages)
+    packages = NativeImpl.create_native_packages(raw_packages)
     [{Kernel, []}] ++ packages
   end
 

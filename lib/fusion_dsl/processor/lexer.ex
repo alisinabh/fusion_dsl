@@ -1,6 +1,6 @@
 defmodule FusionDsl.Processor.Lexer do
   @moduledoc """
-  Tokenizer and normalizer for IVRONE DSL
+  Tokenizer and normalizer for FusionDsl
   """
 
   alias FusionDsl.Processor.CompileConfig
@@ -58,13 +58,13 @@ defmodule FusionDsl.Processor.Lexer do
   defguard is_fn_complete(c) when c in [32, 9, 10, 41]
 
   @doc """
-  Tokenizes an IVRONE Code
+  Tokenizes a FusionDsl Code
 
   Lexical types:
-   - strings begining with quote ('): A literal string
-   - strings begining with percent sign (%): A json object
-   - strings: operators or identifires
-   - number: A literal number. float or integer
+   - strings begining with quote ('): immidiate string
+   - strings begining with percent sign (%): json object
+   - other strings: operators or identifires
+   - numbers: Immidiate number. float or integer.
   """
   @spec tokenize(String.t()) :: {:ok, map(), list()} | {:error, String.t()}
   def tokenize(raw_code) do
@@ -188,7 +188,7 @@ defmodule FusionDsl.Processor.Lexer do
   end)
 
   Enum.each(@packages, fn {module, opts} ->
-    pack_ids = apply(module, :list_functions, [])
+    pack_ids = apply(module, :__list_fusion_functions__, [])
 
     pack_name =
       case opts[:as] do

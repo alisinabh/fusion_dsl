@@ -1,0 +1,25 @@
+FORMAT: FUSION1
+NAME: multi_imp
+VERSION: v0.1
+IMPORT: String
+
+def main:
+  $name = ' Fusion DSL  '
+
+  $trim = String.trim($name)
+
+  $result = to_string($trim == 'Fusion DSL') + ','
+
+  $upcase = upcase($trim)
+
+  $result += to_string($upcase == 'FUSION DSL') + ','
+
+  $substr = String.slice($trim, 0, 5)
+
+  $result += to_string($substr == 'Fusio') + ','
+
+  $true = [1, 2, 3]
+
+  $result += to_string(Enum.all?($true)) + ','
+
+  $result += to_string(Enum.max($true) == 3) + ','

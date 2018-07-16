@@ -2,7 +2,7 @@ defmodule FusionDsl.Impl do
   @moduledoc """
   Implementation module for FusionDsl. This module helps with developing packages for fusion dsl.
 
-  TODO: Add docs
+  Read Plugin docs for more info.
   """
 
   alias FusionDsl.Runtime.Executor
@@ -21,10 +21,10 @@ defmodule FusionDsl.Impl do
   ## Example
   ```elixir
   @impl true
-  def list_functions(), do: [:foo, :bar]
+  def __list_fusion_functions__, do: [:foo, :bar]
   ```
   """
-  @callback list_functions() :: [atom()]
+  @callback __list_fusion_functions__() :: [atom()]
 
   @doc """
   Puts or updates value of a key of assigns in environment.

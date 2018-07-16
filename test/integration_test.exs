@@ -8,9 +8,11 @@ defmodule FusionDslTest.IntegrationTest do
 
   @sample_impl_file "test/samples/integration.fus"
   @multi_import_file "test/samples/multi_import.fus"
+  @native_package_file "test/samples/native_package.fus"
 
   @correct_sample_impl_trues 2
   @correct_multi_import_trues 3
+  @correct_native_package_trues 5
 
   test "SamplImpl integrated function is working" do
     file_data = File.read!(@sample_impl_file)
@@ -42,6 +44,24 @@ defmodule FusionDslTest.IntegrationTest do
 
     correct =
       Enum.reduce(1..@correct_multi_import_trues, "", fn _x, acc ->
+        "true," <> acc
+      end)
+
+    assert result == correct
+  end
+
+  test "native package integrated functions" do
+    file_data = File.read!(@native_package_file)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
+
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:end, env} = Executor.execute(env)
+    result = env.vars["result"]
+
+    correct =
+      Enum.reduce(1..@correct_native_package_trues, "", fn _x, acc ->
         "true," <> acc
       end)
 

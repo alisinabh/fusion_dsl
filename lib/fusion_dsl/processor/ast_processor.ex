@@ -389,7 +389,7 @@ defmodule FusionDsl.Processor.AstProcessor do
   end)
 
   Enum.each(@packages, fn {module, opts} ->
-    pack_ids = apply(module, :list_functions, [])
+    pack_ids = apply(module, :__list_fusion_functions__, [])
 
     pack_name =
       case opts[:as] do
