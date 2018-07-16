@@ -433,7 +433,10 @@ defmodule FusionDsl.Processor.Lexer do
 
       true ->
         # Unmatched code. error will be generated!
-        {:error, acc, bin, "Unknown expression in line! #{Enum.count(acc)}"}
+        {:error, acc, bin,
+         "Unknown expression in line! #{
+           config.start_code + Enum.count(acc, fn x -> x == "\n" end)
+         } \n#{bin}"}
     end
   end
 

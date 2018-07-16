@@ -115,6 +115,12 @@ defmodule FusionDsl.Kernel do
       is_list(left) and is_list(right) ->
         {:ok, left ++ right, env}
 
+      is_list(left) ->
+        {:ok, left ++ [right], env}
+
+      is_list(right) ->
+        {:ok, [left | right], env}
+
       true ->
         {:error,
          "Add(+) is not supported for #{inspect(left)} and #{inspect(right)}"}

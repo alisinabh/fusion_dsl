@@ -465,14 +465,16 @@ defmodule FusionDsl.Processor.AstProcessor do
     end
   end
 
+  defp gen_args_ast([[] | t], t_lines, config, asts),
+    do: gen_args_ast(t, t_lines, config, asts)
+
   defp gen_args_ast([arg | t], t_lines, config, asts) do
+    if arg == [], do: IO.puts("Arg: #{inspect(arg)}")
     {:ok, ast, config} = gen_ast(arg, t_lines, config)
     gen_args_ast(t, t_lines, config, [ast | asts])
   end
 
-  defp gen_args_ast([], _, config, asts) do
-    {:ok, Enum.reverse(asts), config}
-  end
+  defp gen_args_ast([], _, config, asts), do: {:ok, Enum.reverse(asts), config}
 
   defp get_scope_tokens(["(" | t], acc, in_count) do
     get_scope_tokens(t, ["(" | acc], in_count + 1)

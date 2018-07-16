@@ -40,7 +40,7 @@ defmodule FusionDslTest do
     start_code: 5
   }
 
-  @correct_logic_result "Start: add1 11,3,28,1.75,3,4.0,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end"
+  @correct_logic_result "Start: add1 11,3,28,1.75,3,4.0,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 arr_ok end"
   @correct_conditinal_result "start 1,1,1,1,1,1,1,end"
   @correct_strings_trues 14
   @correct_arrays_trues 15
