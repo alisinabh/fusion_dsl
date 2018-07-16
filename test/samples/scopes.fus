@@ -1,7 +1,6 @@
 FORMAT: FUSION1
-NAME: TestApp
-DB: TestDb
-SOUNDS: testsounddir
+NAME: ScopesTests
+VERSION: 0.1.2-rc1
 
 def main:
   $var = 1 + 2
@@ -15,12 +14,12 @@ def main:
   $var9 = (rand 1, 5) + 'vwelc' + (rand 10, 50)
 
 def in_functions:
-  play 1 + 2
-  play 1 + 2 + 3
-  play 1 + 2 * 3
-  play (1 + 2) * 3
-  play (1 + 2) * 3 + 4
-  play (1 + 2) * (3 + 4)
-  play (1 + (rand 1, 5)) + (3 * 4)
-  play 1 + (rand 1, 5) + (3 * 4) # Same as up in result
-  play (rand 1, 5) + 'vwelc' + (rand 10, 50)
+  round 1 + 2
+  round 1 + 2 + 3
+  round 1 + 2 * 3
+  round (1 + 2) * 3
+  round (1 + 2) * 3 + 4
+  round (1 + 2) * (3 + 4)
+  round (1 + (rand 1, 5)) + (3 * 4)
+  round 1 + (rand 1, 5) + (3 * 4) # Same as up in result
+  round (rand 1, 5) + 'vwelc' + (rand 10, 50)

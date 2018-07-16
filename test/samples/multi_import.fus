@@ -1,0 +1,23 @@
+FORMAT: FUSION1
+NAME: multi_imp
+VERSION: v0.1
+IMPORT: SampleImpl
+IMPORT: ChangeNameImpl
+
+def main:
+  $var = rand -90, 90
+  $map = %'{"number": $var}'
+
+  $add = rand 1, 500
+
+  $dat = test($map.number, $add)
+
+  $result = to_string($dat == ($add + $var)) + ','
+
+  $fibo = fibo(13)
+
+  $result += to_string($fibo == 233) + ','
+
+  $pow = int(pow(2, 10))
+
+  $result += to_string($pow == 1024) + ','

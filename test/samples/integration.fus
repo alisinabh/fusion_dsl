@@ -1,0 +1,17 @@
+FORMAT: FUSION1
+NAME: test integration
+VERSION: v0.1
+IMPORT: SampleImpl
+
+def main:
+  $var = 1
+  $map = %'{"number": $var}'
+
+  $add = rand 1, 500
+
+  $dat = test($map.number, $add)
+
+  $dat2 = SampleImpl.test($map.number, $add)
+
+  $result = to_string($dat == ($add + $var)) + ','
+  $result += to_string($dat2 == ($add + $var)) + ','

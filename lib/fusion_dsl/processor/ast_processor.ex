@@ -9,15 +9,7 @@ defmodule FusionDsl.Processor.AstProcessor do
   ```
   """
 
-  alias FusionDsl.Processor.Program
-
-  @default_state %{
-    proc: nil,
-    ln: 0,
-    prog: %Program{},
-    end_asts: [],
-    clauses: []
-  }
+  alias FusionDsl.Processor.CompileConfig
 
   @clause_beginners ["if", "for", "while"]
   @noops ["noop"]
@@ -60,40 +52,7 @@ defmodule FusionDsl.Processor.AstProcessor do
 
   @short_setters ["+=", "-=", "*=", "/=", "%="]
 
-  @functions [
-    :rand,
-    :db_find,
-    :db_insert,
-    :db_update,
-    :db_remove,
-    :goto,
-    :to_number,
-    :to_string,
-    :int,
-    :round,
-    :not,
-    :insert,
-    :elem,
-    :wait,
-    :remove,
-    :dispose,
-    :play,
-    :keycheck,
-    :contains,
-    :index_of,
-    :last_index_of,
-    :length,
-    :starts_with,
-    :ends_with,
-    :slice,
-    :replace,
-    :reverse,
-    :regex,
-    :regex_match,
-    :regex_replace,
-    :regex_run,
-    :regex_scan
-  ]
+  @packages FusionDsl.get_packages()
 
   @doc """
   Generates an ast array of program
@@ -102,28 +61,30 @@ defmodule FusionDsl.Processor.AstProcessor do
     - config: configuration of program
     - tokens: list of line splitted tokens
   """
+  @spec generate_ast(CompileConfig.t(), [[String.t()]]) ::
+          {:ok, CompileConfig.t()}
   def generate_ast(config, tokens) do
-    do_generate_ast(tokens, @default_state)
+    do_generate_ast(tokens, config)
   end
 
-  defp do_generate_ast([[line_number | raw_line] | t], state) do
-    state = Map.put(state, :ln, line_number)
+  defp do_generate_ast([[line_number | raw_line] | t], config) do
+    config = Map.put(config, :ln, line_number)
     line = reorder_line(raw_line)
 
-    {:ok, ast, state} = gen_ast(line, t, state)
+    {:ok, ast, config} = gen_ast(line, t, config)
 
     case ast do
       nil ->
-        do_generate_ast(t, state)
+        do_generate_ast(t, config)
 
       ast ->
-        ast_state = insert_ast_in_state(state, ast)
-        do_generate_ast(t, ast_state)
+        cmp_config = insert_ast_in_config(config, ast)
+        do_generate_ast(t, cmp_config)
     end
   end
 
-  defp do_generate_ast([], state) do
-    {:ok, state}
+  defp do_generate_ast([], config) do
+    {:ok, config}
   end
 
   def reorder_line(line) do
@@ -241,60 +202,62 @@ defmodule FusionDsl.Processor.AstProcessor do
   end
 
   # gen_ast = Generate AST
-  defp gen_ast(["def", str_proc_name], _t_lines, state) do
+  defp gen_ast(["def", str_proc_name], _t_lines, config) do
     proc_name = String.to_atom(str_proc_name)
 
     cur_proces =
-      state.prog.procedures
+      config.prog.procedures
       |> Map.put(proc_name, [])
 
     cur_prog =
-      state.prog
+      config.prog
       |> Map.put(:procedures, cur_proces)
 
-    new_state =
-      state
+    new_config =
+      config
       |> Map.put(:proc, proc_name)
       |> Map.put(:prog, cur_prog)
 
-    {:ok, nil, new_state}
+    {:ok, nil, new_config}
   end
 
-  defp gen_ast(["if" | if_data], t_lines, state) do
+  defp gen_ast(["if" | if_data], t_lines, config) do
     case find_end_else(t_lines) do
       {:ok, skip_amount} ->
-        {:ok, if_cond_ast, state} = gen_ast(if_data, t_lines, state)
+        {:ok, if_cond_ast, config} = gen_ast(if_data, t_lines, config)
 
-        state =
-          state
-          |> Map.put(:end_asts, [{:noop, nil} | state.end_asts])
-          |> Map.put(:clauses, [{:if, [ln: state.ln]} | state.clauses])
+        config =
+          config
+          |> Map.put(:end_asts, [{:noop, nil} | config.end_asts])
+          |> Map.put(:clauses, [{:if, [ln: config.ln]} | config.clauses])
 
-        {:ok, {:jump_not, [ln: state.ln], [if_cond_ast, skip_amount]}, state}
+        {:ok,
+         {{FusionDsl.Kernel, :jump_not}, [ln: config.ln],
+          [if_cond_ast, skip_amount]}, config}
 
       :not_found ->
         raise("'end' for if not found!")
     end
   end
 
-  defp gen_ast(["else"], t_lines, state) do
+  defp gen_ast(["else"], t_lines, config) do
     case find_end_else(t_lines, 0, 0, false) do
       {:ok, skip_amount} ->
-        {:ok, {:jump, [ln: state.ln], [skip_amount]}, state}
+        {:ok, {:jump, [ln: config.ln], [skip_amount]}, config}
 
       :not_found ->
         raise("'end' for else not found!")
     end
   end
 
-  defp gen_ast(["(", "while" | while_data], t_lines, state) do
+  defp gen_ast(["(", "while" | while_data], t_lines, config) do
     case find_end_else(t_lines, 0, 0, false) do
       {:ok, skip_amount} ->
-        {:ok, [while_cond_ast | extra], state} =
+        {:ok, [while_cond_ast | extra], config} =
           while_data
           |> get_scope_tokens([], 0)
           |> split_args([], [], 0)
-          |> gen_args_ast(t_lines, state, [])
+          |> gen_args_ast(t_lines, config, [])
 
         opt =
           case extra do
@@ -302,23 +265,25 @@ defmodule FusionDsl.Processor.AstProcessor do
             _ -> true
           end
 
-        state =
-          state
+        config =
+          config
           |> Map.put(:end_asts, [
-            {:jump_to, [state.ln, 0, opt]} | state.end_asts
+            {:jump_to, [config.ln, 0, opt]} | config.end_asts
           ])
-          |> Map.put(:clauses, [{:loop, [state.ln, 0, opt]} | state.clauses])
+          |> Map.put(:clauses, [{:loop, [config.ln, 0, opt]} | config.clauses])
 
-        {:ok, {:jump_not, [ln: state.ln], [while_cond_ast, skip_amount]}, state}
+        {:ok,
+         {{FusionDsl.Kernel, :jump_not}, [ln: config.ln],
+          [while_cond_ast, skip_amount]}, config}
 
       :not_found ->
         raise("'end' for while not found!")
     end
   end
 
-  defp gen_ast(["break"], t_lines, state) do
+  defp gen_ast(["break"], t_lines, config) do
     inn_init =
-      Enum.reduce(state.clauses, 0, fn x, acc ->
+      Enum.reduce(config.clauses, 0, fn x, acc ->
         case x do
           {:loop, _} ->
             acc
@@ -330,18 +295,18 @@ defmodule FusionDsl.Processor.AstProcessor do
 
     case find_end_else(t_lines, inn_init, 0, false) do
       {:ok, skip_amount} ->
-        {:ok, {:jump, [ln: state.ln], [skip_amount]}, state}
+        {:ok, {:jump, [ln: config.ln], [skip_amount]}, config}
 
       :not_found ->
         raise("'end' for loop not found!")
     end
   end
 
-  defp gen_ast(["continue"], _, state) do
+  defp gen_ast(["continue"], _, config) do
     {:loop, jump_to_args} =
-      Enum.find(state.clauses, nil, fn x ->
+      Enum.find(config.clauses, nil, fn x ->
         case x do
-          {:loop, args} ->
+          {:loop, _args} ->
             true
 
           _ ->
@@ -349,91 +314,117 @@ defmodule FusionDsl.Processor.AstProcessor do
         end
       end)
 
-    {:ok, {:jump_to, [ln: state.ln], jump_to_args}, state}
+    {:ok, {:jump_to, [ln: config.ln], jump_to_args}, config}
   end
 
-  defp gen_ast(["return"], _, state) do
-    {:ok, {:return, [ln: state.ln], nil}, state}
+  defp gen_ast(["return"], _, config) do
+    {:ok, {:return, [ln: config.ln], nil}, config}
   end
 
   # Variables
-  defp gen_ast([<<"$", var::binary>> | _t], _t_lines, state) do
-    {:ok, {:var, [ln: state.ln], [var]}, state}
+  defp gen_ast([<<"$", var::binary>> | _t], _t_lines, config) do
+    {:ok, {:var, [ln: config.ln], [var]}, config}
   end
 
   # Get env variables
-  defp gen_ast([<<"@", var::binary>> | _t], _t_lines, state) do
-    {:ok, {:get_system, [ln: state.ln], [var]}, state}
+  defp gen_ast([<<"@", var::binary>> | _t], _t_lines, config) do
+    {:ok, {{FusionDsl.Kernel, :get_system}, [ln: config.ln], [var]}, config}
   end
 
   # Goto operation
-  defp gen_ast(["goto", proc_name], _t_lines, state) do
-    {:ok, {:goto, [ln: state.ln], [String.to_atom(proc_name)]}, state}
+  defp gen_ast(["goto", proc_name], _t_lines, config) do
+    {:ok, {:goto, [ln: config.ln], [String.to_atom(proc_name)]}, config}
   end
 
   # Goto operation
-  defp gen_ast(["nil"], _t_lines, state) do
-    {:ok, nil, state}
+  defp gen_ast(["nil"], _t_lines, config) do
+    {:ok, nil, config}
   end
 
   # Strings
-  defp gen_ast([<<"'", str::binary>> | _t], _t_lines, state) do
-    {:ok, String.slice(str, 0, String.length(str) - 1), state}
+  defp gen_ast([<<"'", str::binary>> | _t], _t_lines, config) do
+    {:ok, String.slice(str, 0, String.length(str) - 1), config}
   end
 
   # Json objects
-  defp gen_ast([<<"%'", str::binary>> | _t], _t_lines, state) do
+  defp gen_ast([<<"%'", str::binary>> | _t], _t_lines, config) do
     {:ok,
-     {:json, [ln: state.ln], [String.slice(str, 0, String.length(str) - 1)]},
-     state}
+     {{FusionDsl.Kernel, :json_decode}, [ln: config.ln],
+      [String.slice(str, 0, String.length(str) - 1)]}, config}
   end
 
   # Numbers
-  defp gen_ast([num | _t], _t_lines, state) when is_number(num) do
-    {:ok, num, state}
+  defp gen_ast([num | _t], _t_lines, config) when is_number(num) do
+    {:ok, num, config}
   end
 
   # Numbers
-  defp gen_ast([bool | _t], _t_lines, state) when is_boolean(bool) do
-    {:ok, bool, state}
+  defp gen_ast([bool | _t], _t_lines, config) when is_boolean(bool) do
+    {:ok, bool, config}
   end
 
   # Arrays
-  defp gen_ast(["(", "[" | arr_data], t_lines, state) do
-    {:ok, asts, state} =
+  defp gen_ast(["(", "[" | arr_data], t_lines, config) do
+    {:ok, asts, config} =
       arr_data
       |> get_scope_tokens([], 0)
       |> split_args([], [], 0)
-      |> gen_args_ast(t_lines, state, [])
+      |> gen_args_ast(t_lines, config, [])
 
-    {:ok, {:create_array, [ln: state.ln], asts}, state}
+    {:ok, {{FusionDsl.Kernel, :create_array}, [ln: config.ln], asts}, config}
   end
 
   Enum.each(@operators, fn op ->
-    defp gen_ast(["(", "/#{unquote(op)}" | args], t_lines, state) do
-      {:ok, asts, state} =
+    fun = @operator_names[op]
+
+    defp gen_ast(["(", "/#{unquote(op)}" | args], t_lines, config) do
+      {:ok, asts, config} =
         args
         |> get_scope_tokens([], 0)
         |> split_args([], [], 0)
-        |> gen_args_ast(t_lines, state, [])
+        |> gen_args_ast(t_lines, config, [])
 
-      {:ok, {@operator_names[unquote(op)], [ln: state.ln], asts}, state}
+      {:ok, {{FusionDsl.Kernel, unquote(fun)}, [ln: config.ln], asts}, config}
     end
   end)
 
-  Enum.each(@functions, fn fun ->
-    defp gen_ast(["(", unquote(to_string(fun)) | args], t_lines, state) do
-      {:ok, asts, state} =
-        args
-        |> get_scope_tokens([], 0)
-        |> split_args([], [], 0)
-        |> gen_args_ast(t_lines, state, [])
+  Enum.each(@packages, fn {module, opts} ->
+    pack_ids = apply(module, :__list_fusion_functions__, [])
 
-      {:ok, {unquote(fun), [ln: state.ln], asts}, state}
-    end
+    pack_name =
+      case opts[:as] do
+        nil ->
+          module
+          |> to_string
+          |> String.split(".")
+          |> List.last()
+
+        name ->
+          name
+      end
+
+    Enum.each(pack_ids, fn atom_id ->
+      id = to_string(atom_id)
+
+      defp gen_ast(
+             ["(", <<unquote(pack_name), ".", unquote(id)>> | args],
+             t_lines,
+             config
+           ) do
+        {:ok, asts, config} =
+          args
+          |> get_scope_tokens([], 0)
+          |> split_args([], [], 0)
+          |> gen_args_ast(t_lines, config, [])
+
+        {:ok,
+         {{unquote(module), unquote(atom_id)},
+          [ln: config.ln, package: unquote(module)], asts}, config}
+      end
+    end)
   end)
 
-  defp gen_ast(["(" | args], t_lines, state) do
+  defp gen_ast(["(" | args], t_lines, config) do
     sp_args =
       args
       |> get_scope_tokens([], 0)
@@ -441,47 +432,49 @@ defmodule FusionDsl.Processor.AstProcessor do
 
     case sp_args do
       [single] ->
-        gen_ast(single, t_lines, state)
+        gen_ast(single, t_lines, config)
 
       _ when is_list(sp_args) ->
-        gen_args_ast(args, t_lines, state, [])
+        gen_args_ast(args, t_lines, config, [])
     end
   end
 
   # Operations that actualy does not do anything at runtime but ast
   # position matters
   Enum.each(@noops, fn noop ->
-    defp gen_ast([unquote(noop) | _], _t_lines, state) do
-      {:ok, {:noop, [ln: state.ln], []}, state}
+    defp gen_ast([unquote(noop) | _], _t_lines, config) do
+      {:ok, {:noop, [ln: config.ln], []}, config}
     end
   end)
 
-  defp gen_ast(["end"], _t_lines, state) do
-    [_ | tail_c] = state.clauses
+  defp gen_ast(["end"], _t_lines, config) do
+    [_ | tail_c] = config.clauses
 
-    case state.end_asts do
+    case config.end_asts do
       [] ->
-        state = Map.put(state, :clauses, tail_c)
-        {:ok, {:noop, [ln: state.ln], nil}, state}
+        config = Map.put(config, :clauses, tail_c)
+        {:ok, {:noop, [ln: config.ln], nil}, config}
 
       [{fun, args} | t] ->
-        state =
-          state
+        config =
+          config
           |> Map.put(:end_asts, t)
           |> Map.put(:clauses, tail_c)
 
-        {:ok, {fun, [ln: state.ln], args}, state}
+        {:ok, {fun, [ln: config.ln], args}, config}
     end
   end
 
-  defp gen_args_ast([arg | t], t_lines, state, asts) do
-    {:ok, ast, state} = gen_ast(arg, t_lines, state)
-    gen_args_ast(t, t_lines, state, [ast | asts])
+  defp gen_args_ast([[] | t], t_lines, config, asts),
+    do: gen_args_ast(t, t_lines, config, asts)
+
+  defp gen_args_ast([arg | t], t_lines, config, asts) do
+    if arg == [], do: IO.puts("Arg: #{inspect(arg)}")
+    {:ok, ast, config} = gen_ast(arg, t_lines, config)
+    gen_args_ast(t, t_lines, config, [ast | asts])
   end
 
-  defp gen_args_ast([], _, state, asts) do
-    {:ok, Enum.reverse(asts), state}
-  end
+  defp gen_args_ast([], _, config, asts), do: {:ok, Enum.reverse(asts), config}
 
   defp get_scope_tokens(["(" | t], acc, in_count) do
     get_scope_tokens(t, ["(" | acc], in_count + 1)
@@ -574,14 +567,15 @@ defmodule FusionDsl.Processor.AstProcessor do
     :not_found
   end
 
-  defp insert_ast_in_state(state, ast) do
+  # Inserts generated ast in current procedure (config.proc)
+  defp insert_ast_in_config(config, ast) do
     %{
-      state
+      config
       | prog: %{
-          state.prog
+          config.prog
           | procedures: %{
-              state.prog.procedures
-              | state.proc => state.prog.procedures[state.proc] ++ [ast]
+              config.prog.procedures
+              | config.proc => config.prog.procedures[config.proc] ++ [ast]
             }
         }
     }

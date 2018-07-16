@@ -1,7 +1,6 @@
 FORMAT: FUSION1
-NAME: TestApp
-DB: TestDb
-SOUNDS: testsounddir
+NAME: Logical_Test
+VERSION: 0.1.2-rc1
 
 def main:
   $result = 'Start: '
@@ -13,6 +12,18 @@ def main:
   $a = -3
   $t = 10
   goto do_logics
+
+  $arr = []
+  $arr = $arr + 2
+  $arr = $arr + 3
+  $arr = 1 + $arr
+  $arr += [4, 5]
+  if $arr == [1, 2, 3, 4, 5]
+    $result += 'arr_ok '
+  else
+    $result += 'arr_not_ok '
+  end
+
   $result += 'end'
 
 def do_logics:

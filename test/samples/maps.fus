@@ -1,0 +1,27 @@
+FORMAT: FUSION1
+NAME: TestMaps
+VERSION: 0.1
+
+def main:
+  $result = ''
+  $var = rand 1, 10
+  $map = %'{"number": $var, "text": "$var"}'
+
+  $result += ($map.number == $var) + ','
+  $result += ($map.text == to_string($var)) + ','
+  $result += ($map.text != $map.number) + ','
+
+  $json = '{"text": "hello world!", "number": 10, "float": 98.23}'
+  $decoded = json_decode $json
+
+  $decoded.float = 1.2
+  $decoded.new_number = 4
+
+  $encoded = json_encode $decoded
+  $decoded = json_decode $encoded
+
+  $result += ($decoded.float == 1.2) + ','
+  $result += ($decoded.text == 'hello world!') + ','
+
+  $result += ($decoded.number == 10) + ','
+  $result += ($decoded.new_number == 4) + ','

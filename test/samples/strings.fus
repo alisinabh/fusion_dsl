@@ -1,7 +1,6 @@
 FORMAT: FUSION1
-NAME: TestApp
-DB: TestDb
-SOUNDS: testsounddir
+NAME: StringFN tests
+VERSION: 0.1.2-rc1
 
 def main:
   $result = ''

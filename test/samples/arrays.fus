@@ -1,7 +1,6 @@
 FORMAT: FUSION1
-NAME: TestApp
-DB: TestDb
-SOUNDS: testsounddir
+NAME: Arrays Test
+VERSION: 1
 
 def main:
   $result = ''

@@ -1,35 +1,51 @@
 defmodule FusionDslTest do
   use ExUnit.Case
-  doctest FusionDsl
+  doctest FusionDsl.Helpers.FunctionNames
 
   alias FusionDsl.Processor.Lexer
   alias FusionDsl.Processor.AstProcessor
-  alias FusionDsl.Runtime.Enviornment
+  alias FusionDsl.Runtime.Environment
   alias FusionDsl.Runtime.Executor
 
-  @full_tokens_file "test/samples/full_tokens.ivr1"
-  @scopes_file "test/samples/scopes.ivr1"
-  @logical_file "test/samples/logical.ivr1"
-  @coditional_file "test/samples/conditional.ivr1"
-  @strings_file "test/samples/strings.ivr1"
-  @arrays_file "test/samples/arrays.ivr1"
-  @regex_file "test/samples/regex.ivr1"
+  @full_tokens_file "test/samples/full_tokens.fus"
+  @scopes_file "test/samples/scopes.fus"
+  @logical_file "test/samples/logical.fus"
+  @coditional_file "test/samples/conditional.fus"
+  @strings_file "test/samples/strings.fus"
+  @arrays_file "test/samples/arrays.fus"
+  @regex_file "test/samples/regex.fus"
+  @maps_file "test/samples/maps.fus"
 
-  @full_tokens_first_ln 6
-  @full_tokens_last_ln 37
+  @full_tokens_first_ln 5
+  @full_tokens_last_ln 53
 
-  @correct_config %{
-    db: "TestDb",
-    format: "FUSION1",
-    name: "TestApp",
-    sounds: "testsounddir",
-    start_code: 6
+  @correct_config %FusionDsl.Processor.CompileConfig{
+    clauses: [],
+    end_asts: [],
+    headers: %{
+      format: "FUSION1",
+      name: "FullTokenTest",
+      version: "0.1.2-rc1"
+    },
+    imports: %{"Kernel" => true},
+    ln: 0,
+    proc: nil,
+    prog: %FusionDsl.Processor.Program{
+      config: [],
+      fusion_version: nil,
+      name: nil,
+      procedures: %{},
+      version: nil
+    },
+    start_code: 5
   }
-  @correct_logic_result "Start: add1 11,3,28,1.75,3,4.0,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 end"
+
+  @correct_logic_result "Start: add1 11,3,28,1.75,3,4.0,4,11,false,true,true,false,true,false,true,true,if,6 1,-7,-12,-0.75,-3,-2.6666666666666665,-3,11,false,false,false,false,true,true,false,false,else,11 arr_ok end"
   @correct_conditinal_result "start 1,1,1,1,1,1,1,end"
   @correct_strings_trues 14
   @correct_arrays_trues 15
   @correct_regex_trues 4
+  @correct_maps_trues 7
 
   test "lexer lang-id order is correct" do
     [id | t] = Lexer.get_lang_ids()
@@ -86,8 +102,8 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:end, env} = Executor.execute(env)
     assert env.vars["result"] == @correct_logic_result
   end
 
@@ -97,8 +113,8 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:end, env} = Executor.execute(env)
     assert env.vars["result"] == @correct_conditinal_result
   end
 
@@ -108,8 +124,8 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
     correct =
@@ -126,8 +142,8 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
     correct =
@@ -144,12 +160,30 @@ defmodule FusionDslTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Enviornment.prepare_env()
-    {:end, env} = Executor.execute(ast_data.prog, env)
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
     correct =
       Enum.reduce(1..@correct_regex_trues, "", fn _x, acc ->
+        "true," <> acc
+      end)
+
+    assert result == correct
+  end
+
+  test "Map operations work as expected" do
+    file_data = File.read!(@maps_file)
+    assert {:ok, conf, tokens} = Lexer.tokenize(file_data)
+    lines = Lexer.split_by_lines(tokens, conf.start_code)
+    assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
+
+    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:end, env} = Executor.execute(env)
+    result = env.vars["result"]
+
+    correct =
+      Enum.reduce(1..@correct_maps_trues, "", fn _x, acc ->
         "true," <> acc
       end)
 
