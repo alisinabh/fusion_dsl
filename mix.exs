@@ -1,10 +1,12 @@
 defmodule FusionDsl.MixProject do
   use Mix.Project
 
+  @version "0.0.1-dev"
+
   def project do
     [
       app: :fusion_dsl,
-      version: "0.0.0",
+      version: @version,
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -12,13 +14,9 @@ defmodule FusionDsl.MixProject do
 
       # Docs
       name: "Fusion DSL",
-      source_url: "https://github.com/alisinabh/fusion_dsl",
+      source_url: "https://github.com/fusiondsl/fusion_dsl",
       homepage_url: "https://fusiondsl.org",
-      docs: [
-        main: "readme",
-        logo: "fusion-dsl-250px.png",
-        extras: ["README.md"]
-      ]
+      docs: docs()
     ]
   end
 
@@ -41,4 +39,19 @@ defmodule FusionDsl.MixProject do
 
   defp elixirc_paths(:test), do: ["lib", "test/integration"]
   defp elixirc_paths(_), do: ["lib"]
+
+  defp docs do
+    [
+      source_ref: "v#{@version}",
+      main: "readme",
+      logo: "fusion-dsl-250px.png",
+      extra_section: "GUIDES",
+      formatters: ["html", "epub"],
+      extras: extras()
+    ]
+  end
+
+  defp extras do
+    ["README.md", "guides/packages.md"]
+  end
 end

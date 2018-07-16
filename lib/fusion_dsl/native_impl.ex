@@ -10,7 +10,8 @@ defmodule FusionDsl.NativeImpl do
   config :fusion_dsl, packages: [{String, [type: :native]}, ...]
   ```
 
-  Refer to plugins docs for more info.
+  Refer to [packages](packages.html#existing-elixir-erlang-modules-as-packages)
+  docs for more info.
   """
 
   @doc """

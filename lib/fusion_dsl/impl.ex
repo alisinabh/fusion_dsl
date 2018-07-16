@@ -2,7 +2,7 @@ defmodule FusionDsl.Impl do
   @moduledoc """
   Implementation module for FusionDsl. This module helps with developing packages for fusion dsl.
 
-  Read Plugin docs for more info.
+  Read [packages](packages.html) docs for more info.
   """
 
   alias FusionDsl.Runtime.Executor
