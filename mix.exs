@@ -11,12 +11,17 @@ defmodule FusionDsl.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      package: package(),
+      docs: docs(),
 
       # Docs
-      name: "Fusion DSL",
+      name: "FusionDSL",
       source_url: "https://github.com/fusiondsl/fusion_dsl",
       homepage_url: "https://fusiondsl.org",
-      docs: docs()
+      description: """
+      An idiot proof, easy, scalable and production ready 
+      functional domain specific programming language.
+      """
     ]
   end
 
@@ -53,5 +58,17 @@ defmodule FusionDsl.MixProject do
 
   defp extras do
     ["README.md", "guides/packages.md"]
+  end
+
+  defp package do
+    [
+      maintainers: ["Alisina Bahadori"],
+      licenses: ["MIT"],
+      links: %{
+        website: "https://fusiondsl.org",
+        github: "https://github.com/fusiondsl/fusion_dsl"
+      },
+      files: ~w(lib guides LICENSE mix.exs README.md)
+    ]
   end
 end
