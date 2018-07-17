@@ -51,7 +51,8 @@ defmodule FusionDsl.Logger do
     prog_info = Environment.get_info(env, :small)
 
     full_log =
-      "#{to_string(type)} line #{ctx[:ln]} package:#{prog_info}\n" <> log_str
+      "#{to_string(type)} line #{ctx[:ln]} package:#{prog_info}\n" <>
+        to_string(log_str)
 
     Enum.each(@loggers, fn logger ->
       if logger == Elixir.Logger do
