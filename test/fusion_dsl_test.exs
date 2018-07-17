@@ -89,7 +89,6 @@ defmodule FusionDslTest do
   test "Headers are parsed correctly" do
     file_data = File.read!(@full_tokens_file)
     assert {:ok, conf, _tokens} = Lexer.tokenize(file_data)
-    IO.puts(inspect(conf))
     assert @correct_config == conf
   end
 

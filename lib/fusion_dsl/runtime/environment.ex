@@ -35,9 +35,9 @@ defmodule FusionDsl.Runtime.Environment do
   Prepares enviornments data and returns the data
   """
   # TODO: get call info or test info
-  def prepare_env(compile_config) do
+  def prepare_env(compile_config, env \\ %__MODULE__{}) do
     prog = Map.put(compile_config.prog, :headers, compile_config.headers)
-    {:ok, %__MODULE__{prog: prog}}
+    {:ok, %{env | prog: prog}}
   end
 
   def get_info(env, :small) do
