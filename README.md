@@ -10,7 +10,7 @@ A functional single file programming language, designed to be edited and managed
 
 ### Hello World
 
-```
+```elixir
 NAME: My Fusion APP
 VERSION: 0.1-rc1
 
