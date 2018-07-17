@@ -20,7 +20,7 @@ defmodule FusionDslTest.IntegrationTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
@@ -38,7 +38,7 @@ defmodule FusionDslTest.IntegrationTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 
@@ -56,7 +56,7 @@ defmodule FusionDslTest.IntegrationTest do
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     assert {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data)
     {:end, env} = Executor.execute(env)
     result = env.vars["result"]
 

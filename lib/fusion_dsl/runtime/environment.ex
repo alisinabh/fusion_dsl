@@ -35,7 +35,22 @@ defmodule FusionDsl.Runtime.Environment do
   Prepares enviornments data and returns the data
   """
   # TODO: get call info or test info
-  def prepare_env(prog) do
+  def prepare_env(compile_config) do
+    prog = Map.put(compile_config.prog, :headers, compile_config.headers)
     {:ok, %__MODULE__{prog: prog}}
+  end
+
+  def get_info(env, :small) do
+    "#{Map.get(env.prog.headers, :name, "NO-NAME")} v:#{
+      Map.get(env.prog.headers, :version, "NO-VERSION")
+    }"
+  end
+
+  def get_info(env, :full) do
+    "#{get_info(env, :small)}\n" <>
+      "ELixir version: #{System.version()}\n" <>
+      "OPT version: #{:erlang.system_info(:opt_release)}\n" <>
+      "ERTS: #{:erlang.system_info(:version)}\n" <>
+      "TotalUsedMemory: #{:erlang.memory(:total)}"
   end
 end

@@ -17,6 +17,11 @@ defmodule FusionDsl do
   alias FusionDsl.Runtime.Executor
   alias FusionDsl.NativeImpl
 
+  @predefined_packages Application.get_env(:fusion_dsl, :predefined_packages, [
+                         {Kernel, []},
+                         {FusionDsl.Logger, []}
+                       ])
+
   @typedoc """
   Keywords used in package configs
 
@@ -32,16 +37,16 @@ defmodule FusionDsl do
   def get_packages do
     raw_packages = Application.get_env(:fusion_dsl, :packages, [])
     packages = NativeImpl.create_native_packages(raw_packages)
-    [{Kernel, []}] ++ packages
+    @predefined_packages ++ packages
   end
 
-  def test_ast_begin(filename \\ "test/samples/logical.fus") do
+  def test_ast_begin(filename \\ "logtest.fus") do
     {:ok, conf, tokens} = Lexer.tokenize(File.read!(filename))
 
     lines = Lexer.split_by_lines(tokens, conf.start_code)
     {:ok, ast_data} = AstProcessor.generate_ast(conf, lines)
 
-    {:ok, env} = Environment.prepare_env(ast_data.prog)
+    {:ok, env} = Environment.prepare_env(ast_data)
     Executor.execute(env)
   end
 end

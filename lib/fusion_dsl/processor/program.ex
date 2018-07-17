@@ -8,10 +8,7 @@ defmodule FusionDsl.Processor.Program do
   and runtime version.
   """
   @type t :: %__MODULE__{
-          name: String.t(),
-          version: String.t(),
-          config: [Keyword.t()],
-          fusion_version: non_neg_integer(),
+          headers: %{atom() => String.t()},
           procedures: %{String.t() => list(ast)}
         }
 
@@ -46,5 +43,6 @@ defmodule FusionDsl.Processor.Program do
   """
   @type ast_arg :: ast | integer | float | String.t() | map
 
-  defstruct [:name, :version, config: [], fusion_version: nil, procedures: %{}]
+  defstruct headers: %{},
+            procedures: %{}
 end
