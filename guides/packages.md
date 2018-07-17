@@ -165,7 +165,7 @@ We returned the result in a tuple just because we needed to return both `result`
 
 ### Preparing arguments
 
-There is a problem with the `foo` implementation. It works in the below situations:
+There is a problem with the `foo` implementation in [FusionPackage](#basic-module). It works in the below situations:
 ```
 $var = foo(1)
 $var = foo(10)
@@ -202,6 +202,30 @@ end
 ```
 
 For more information Visit `FusionDsl.Impl` docs.
+
+## Package Bootstrap
+
+This is a simple and minimal bootstrap for a fusion DSL package module.
+
+```elixir
+defmodule FusionPackage do
+  @moduledoc "Add docs of your package!"
+
+  use FusionDsl.Impl
+
+  @functions [:add]
+
+  @impl true
+  def __list_fusion_functions__, do: @functions
+
+  @doc "function documentation. should contain docs about arguments too!"
+  def add({:add, _ctx, args}, env) do
+    {:ok, [number1, number2], env} = prep_arg(env, args)
+	
+	{:ok, number1 + number2, env} # {:ok, RESULT_HERE(Or nil if no result), env}
+  end	
+end
+```
 
 ## Existing elixir/erlang modules as Packages
 

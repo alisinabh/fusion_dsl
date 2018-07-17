@@ -74,11 +74,12 @@ defmodule FusionDsl.Impl do
   Ensures that all asts in arguments (such as functions values in args)
   are converted to terms (raw values)
 
-  For example an argument list may look like: args=`[1, {:rand, [ln: 2], [5, 10]}]`
+  For example an argument list may look like: `[1, {:rand, [ln: 2], [5, 10]}]`
 
   When called with prep_arg(env, args) the output of prep_args will be:
 
   ```
+  iex> prep_arg(env, [1, {:rand, [ln: 2], [5, 10]}])
   {:ok, [1, 6], env}
   ```
 
