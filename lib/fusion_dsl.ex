@@ -30,6 +30,12 @@ defmodule FusionDsl do
   """
   @type package_options :: {:as, String.t()} | {:name, atom()}
 
+  def start(_type, _args) do
+    :timer.sleep(100)
+    IEx.Helpers.r(FusionDsl.Processor.Lexer)
+    IEx.Helpers.r(FusionDsl.Processor.AstProcessor)
+  end
+
   @doc """
   Returns a list of configured packages in their original configuration format
   """
@@ -37,7 +43,16 @@ defmodule FusionDsl do
   def get_packages do
     raw_packages = Application.get_env(:fusion_dsl, :packages, [])
     packages = NativeImpl.create_native_packages(raw_packages)
-    @predefined_packages ++ packages
+    all_packages = @predefined_packages ++ packages
+
+    # Remove all unavailable packages
+    Enum.reduce(all_packages, [], fn pack, acc ->
+      if function_exported(pack, :__info__, 1) do
+        acc ++ [pack]
+      else
+        acc
+      end
+    end)
   end
 
   def test_ast_begin(filename \\ "logtest.fus") do

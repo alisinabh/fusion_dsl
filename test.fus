@@ -1,0 +1,5 @@
+NAME: test
+
+def main:
+  $var = 1
+  Logger.debug $var
