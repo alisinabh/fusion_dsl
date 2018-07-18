@@ -16,6 +16,7 @@ defmodule FusionDsl do
   alias FusionDsl.Runtime.Environment
   alias FusionDsl.Runtime.Executor
   alias FusionDsl.NativeImpl
+  alias FusionDsl.Helpers.CodeReloader
 
   @predefined_packages Application.get_env(:fusion_dsl, :predefined_packages, [
                          {Kernel, []},
@@ -32,8 +33,9 @@ defmodule FusionDsl do
 
   def start(_type, _args) do
     :timer.sleep(100)
-    IEx.Helpers.r(FusionDsl.Processor.Lexer)
-    IEx.Helpers.r(FusionDsl.Processor.AstProcessor)
+
+    CodeReloader.reload_module(FusionDsl.Processor.Lexer)
+    CodeReloader.reload_module(FusionDsl.Processor.AstProcessor)
   end
 
   @doc """
@@ -46,8 +48,8 @@ defmodule FusionDsl do
     all_packages = @predefined_packages ++ packages
 
     # Remove all unavailable packages
-    Enum.reduce(all_packages, [], fn pack, acc ->
-      if function_exported(pack, :__info__, 1) do
+    Enum.reduce(all_packages, [], fn {mod, _} = pack, acc ->
+      if function_exported?(mod, :__info__, 1) do
         acc ++ [pack]
       else
         acc
