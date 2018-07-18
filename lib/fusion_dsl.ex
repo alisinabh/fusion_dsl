@@ -10,9 +10,6 @@ defmodule FusionDsl do
    - Code execution.
   """
 
-  require FusionDsl.Kernel
-  require FusionDsl.Logger
-
   alias FusionDsl.Kernel
   alias FusionDsl.Processor.Lexer
   alias FusionDsl.Processor.AstProcessor
@@ -48,6 +45,9 @@ defmodule FusionDsl do
   """
   @spec get_packages :: [{atom(), [package_options]}]
   def get_packages do
+    require FusionDsl.Kernel
+    require FusionDsl.Logger
+
     raw_packages = Application.get_env(:fusion_dsl, :packages, [])
     packages = NativeImpl.create_native_packages(raw_packages)
     all_packages = @predefined_packages ++ packages
