@@ -10,6 +10,9 @@ defmodule FusionDsl do
    - Code execution.
   """
 
+  require FusionDsl.Kernel
+  require FusionDsl.Logger
+
   alias FusionDsl.Kernel
   alias FusionDsl.Processor.Lexer
   alias FusionDsl.Processor.AstProcessor
@@ -36,6 +39,8 @@ defmodule FusionDsl do
 
     CodeReloader.reload_module(FusionDsl.Processor.Lexer)
     CodeReloader.reload_module(FusionDsl.Processor.AstProcessor)
+
+    {:ok, self()}
   end
 
   @doc """
@@ -52,6 +57,7 @@ defmodule FusionDsl do
       if function_exported?(mod, :__info__, 1) do
         acc ++ [pack]
       else
+        IO.puts("Package missing #{inspect(pack)}")
         acc
       end
     end)
