@@ -54,6 +54,8 @@ defmodule FusionDsl do
 
     # Remove all unavailable packages
     Enum.reduce(all_packages, [], fn {mod, _} = pack, acc ->
+      Code.ensure_loaded(mod)
+
       if function_exported?(mod, :__info__, 1) do
         acc ++ [pack]
       else
