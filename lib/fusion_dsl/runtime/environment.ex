@@ -5,7 +5,7 @@ defmodule FusionDsl.Runtime.Environment do
 
   defstruct vars: %{},
             sys_vars: %{},
-            cur_proc: [:main],
+            cur_proc: [],
             jump_c: 0,
             assigns: %{},
             prog: nil

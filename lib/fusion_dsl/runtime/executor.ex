@@ -27,7 +27,9 @@ defmodule FusionDsl.Runtime.Executor do
   @doc """
   Executes the program in given enviornment
   """
+  @spec execute(Environment.t(), atom()) :: {:end, Environment.t()}
   def execute(env, proc \\ :main) do
+    env = Map.put(env, :cur_proc, [proc | env.cur_proc])
     execute_procedure(env.prog.procedures[proc], env)
   end
 
@@ -56,8 +58,7 @@ defmodule FusionDsl.Runtime.Executor do
 
       {:end, env} ->
         [_ | t] = env.cur_proc
-        env = Map.put(env, :cur_proc, t)
-        {:end, env}
+        {:end, Map.put(env, :cur_proc, t)}
     end
   end
 
