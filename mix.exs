@@ -28,6 +28,7 @@ defmodule FusionDsl.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {FusionDsl, []},
       extra_applications: [:logger]
     ]
   end
@@ -42,7 +43,7 @@ defmodule FusionDsl.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["lib", "test/integration"]
+  defp elixirc_paths(:test), do: ["test/integration", "lib"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp docs do
