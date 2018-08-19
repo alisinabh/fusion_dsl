@@ -14,6 +14,8 @@ defmodule FusionDsl.NativeImpl do
   docs for more info.
   """
 
+  require Logger
+
   @doc """
   Creates proxy modules for native packages.
 
@@ -109,7 +111,38 @@ defmodule FusionDsl.NativeImpl do
 
   # Returns documentation of native functions with argument lists
   defp get_function_doc(module, function) do
-    docs = Code.get_docs(module, :docs)
+    version =
+      System.version()
+      |> String.split(".", parts: 3)
+
+    case version do
+      ["1", x, _] ->
+        {x, _} = Integer.parse(x)
+
+        if x >= 7 do
+          do_get_func_doc_post_17(module, function)
+        else
+          do_get_func_doc_pre_17(module, function)
+        end
+
+      _ ->
+        do_get_func_doc_post_17(module, function)
+    end
+  end
+
+  defp do_get_func_doc_pre_17(module, function) do
+    docs =
+      case Code.get_docs(module, :docs) do
+        arr when is_list(arr) ->
+          arr
+
+        other ->
+          Logger.error(
+            "Bad get_docs for #{inspect(module)} -> #{inspect(other)}"
+          )
+
+          []
+      end
 
     doc =
       Enum.find(docs, fn {{name, _}, _, kind, _, _} ->
@@ -124,6 +157,37 @@ defmodule FusionDsl.NativeImpl do
           end)
 
         doc <> "\n" <> arg_docs
+
+      _ ->
+        "No native documentation available!"
+    end
+  end
+
+  defp do_get_func_doc_post_17(module, function) do
+    docs =
+      case Code.fetch_docs(module) do
+        {:docs_v1, _anno, _lang, _format, _module_doc, _meta, docs} ->
+          docs
+
+        error ->
+          Logger.error(
+            "Error reading docs for module #{inspect(module)} -> #{
+              inspect(error)
+            }"
+          )
+
+          []
+      end
+
+    doc =
+      Enum.find(docs, fn {{kind, name, _}, _, _, _, _} ->
+        name == function and kind == :function
+      end)
+
+    case doc do
+      {{_, ^function, _}, _, _, doc, _} when is_binary(doc) ->
+        # TODO: Fix arg docs in elixir >= 1.7
+        doc
 
       _ ->
         "No native documentation available!"
