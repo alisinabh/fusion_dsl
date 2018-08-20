@@ -12,6 +12,13 @@ defmodule FusionDsl.Service do
 
   @type service_config :: [{atom(), String.t()}]
 
+  defmacro __using__(_opts) do
+    quote do
+      import FusionDsl.Service
+      @behaviour FusionDsl.Service
+    end
+  end
+
   @doc """
   Should return list of parameters of service.
 
