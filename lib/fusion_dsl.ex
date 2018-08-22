@@ -40,12 +40,7 @@ defmodule FusionDsl do
     CodeReloader.reload_module(FusionDsl.Processor.Lexer)
     CodeReloader.reload_module(FusionDsl.Processor.AstProcessor)
 
-    children = [
-      {FusionDsl.Service.Registry, []}
-    ]
-
-    opts = [strategy: :one_for_one, name: FusionDsl]
-    Supervisor.start_link(children, opts)
+    {:ok, self()}
   end
 
   @doc """
